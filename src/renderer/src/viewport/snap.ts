@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { t } from '../i18n'
 
 export interface SnapSettings {
   enabled: boolean
@@ -13,7 +14,7 @@ export type ViewPlaneName = 'Side' | 'Front' | 'Top'
 /**
  * The plane snapping happens in: the armature-space axis plane most face-on
  * to the camera. Looking from the side you snap in the side plane, from the
- * top in the ground plane — so poses built in a side view stay flat in it,
+ * top in the ground plane, so poses built in a side view stay flat in it,
  * Pivot-style. Coordinates are armature space, i.e. Blender units, whatever
  * the app's display scaling.
  */
@@ -138,5 +139,7 @@ export function latticePoint(
 }
 
 export function formatGrid(grid: number): string {
-  return grid >= 1 ? `${grid} m` : `${+(grid * 100).toFixed(1)} cm`
+  return grid >= 1
+    ? t('units.meters', { value: grid })
+    : t('units.centimeters', { value: +(grid * 100).toFixed(1) })
 }

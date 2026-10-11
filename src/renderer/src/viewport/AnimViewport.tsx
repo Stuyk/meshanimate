@@ -5,6 +5,7 @@ import { commitLivePose } from '../anim/actions'
 import type { LightingMode } from './scene'
 import { formatGrid } from './snap'
 import { MagnetIcon } from '../components/icons'
+import { t } from '../i18n'
 
 export interface AnimViewportHandle {
   engine: AnimEngine
@@ -137,8 +138,8 @@ export default function AnimViewport(props: AnimViewportProps): JSX.Element {
       return
     }
     const specs: GhostSpec[] = []
-    // The first-frame ghost stays put whatever the playhead does — even
-    // during playback and with onion skin off — so the starting pose is
+    // The first-frame ghost stays put whatever the playhead does, even
+    // during playback and with onion skin off, so the starting pose is
     // always there to come back to.
     const pinFirst = d.showFirstFrame && studio.frame() !== 0
     if (pinFirst) {
@@ -331,7 +332,7 @@ export default function AnimViewport(props: AnimViewportProps): JSX.Element {
         ref={navCanvas}
         class="absolute top-3 right-3 w-24 h-24 cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
         onPointerDown={onNavDown}
-        title="Click a face to snap the view; drag to orbit"
+        title={t('viewport.navCube')}
       />
       <Show when={studio.rig()}>
         <button
@@ -339,8 +340,12 @@ export default function AnimViewport(props: AnimViewportProps): JSX.Element {
           onClick={() => studio.setSnap({ enabled: !studio.snap().enabled })}
           title={
             studio.snap().enabled
-              ? `Snapping in the ${studio.viewPlane().toLowerCase()} plane: handles land on a ${formatGrid(studio.snap().grid)} grid, single bones swing in ${studio.snap().angle}° steps. Hold Ctrl to drag freely. (S)`
-              : 'Snapping off — click or press S to turn on. Hold Ctrl to snap just this drag.'
+              ? t('snap.titleOn', {
+                  plane: t(`snap.planes.${studio.viewPlane()}`).toLowerCase(),
+                  grid: formatGrid(studio.snap().grid),
+                  angle: studio.snap().angle
+                })
+              : t('snap.titleOff')
           }
           class={`absolute top-[116px] right-3 flex items-center gap-1.5 h-6 px-2 rounded-[var(--ui-radius)] border text-[10px] font-semibold cursor-pointer select-none transition-colors ${
             studio.snap().enabled
@@ -349,8 +354,12 @@ export default function AnimViewport(props: AnimViewportProps): JSX.Element {
           }`}
         >
           <MagnetIcon size={12} class={studio.snap().enabled ? 'text-[var(--accent-color)]' : ''} />
-          <Show when={studio.snap().enabled} fallback="Snap off">
-            {studio.viewPlane()} · {formatGrid(studio.snap().grid)} · {studio.snap().angle}°
+          <Show when={studio.snap().enabled} fallback={t('snap.badgeOff')}>
+            {t('snap.badgeOn', {
+              plane: t(`snap.planes.${studio.viewPlane()}`),
+              grid: formatGrid(studio.snap().grid),
+              angle: studio.snap().angle
+            })}
           </Show>
         </button>
       </Show>

@@ -17,14 +17,14 @@
   </a>
 </p>
 
-Open a `.blend`, grab a bone by its handle and drag it where it should go. Move to another frame, pose again. MeshAnimate keys whole poses on a single clear timeline, shows the poses before and after as onion-skin ghosts, and writes everything back into your `.blend` as ordinary Blender actions, NLA tracks included.
+Open a `.blend`, drag a bone to pose it, move to another frame and pose again. MeshAnimate shows your poses on a simple timeline, shows the poses before and after as ghosts, and saves your animation back into the `.blend` as normal Blender actions.
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=d1_FvcEW-b4">
     <img src="https://img.youtube.com/vi/d1_FvcEW-b4/maxresdefault.jpg" alt="Watch the MeshAnimate walkthrough on YouTube" width="80%" />
   </a>
   <br />
-  <sub><a href="https://www.youtube.com/watch?v=d1_FvcEW-b4">▶ Watch the one-minute walkthrough</a>: open a .blend, key a walk cycle, refine it with IK and onion skin, save it back.</sub>
+  <sub><a href="https://www.youtube.com/watch?v=d1_FvcEW-b4">Watch the one-minute video</a></sub>
 </p>
 
 <p align="center">
@@ -36,44 +36,48 @@ Open a `.blend`, grab a bone by its handle and drag it where it should go. Move 
   <img src="docs/screenshots/reference.png" alt="Posing against a reference image" width="49%" />
 </p>
 
-## What it does
+## Features
 
-- **Grab and pose.** Every bone has a handle at its tip: drag it and the bone swings, like Pivot Stickfigure Animator. The orange square moves the whole rig.
-- **Uses your rig's IK.** Limbs driven by Blender IK constraints are posed by dragging the foot or hand; poles aim the knee and elbow. The preview matches Blender's solver to within half a degree.
-- **Onion skin.** Ghosts of the previous and next poses (or every Nth frame) in two colours you choose, plus an optional pinned ghost of the first frame so the starting pose is always in view.
-- **A timeline you can read.** One row of pose keys, one row showing where the selected bone actually moves. Drag to retime, Alt+drag to copy, box-select, right-click for easing, and set a preview range to loop just the part you're polishing.
-- **Snapping.** From a side, front or top view, handles land on a grid and bones swing in clean angle steps, in Blender units.
-- **Walk-cycle helpers.** Mirror a pose left ↔ right, or key its mirror half a cycle later with one key press.
-- **Reference images and video** behind the model; video follows the playhead frame by frame.
-- **Plays exactly like Blender.** Untouched actions preview Blender's own evaluation; edited ones use the same Bézier, easing and quaternion maths, verified against Blender in the test suite.
+- **Drag to pose.** Each bone has a handle at its end. Drag it to move the bone, like Pivot Stickfigure Animator. The orange square moves the whole rig.
+- **IK.** Limbs that use Blender IK are posed by dragging the hand or foot. Poles point the knee and elbow. The result matches Blender.
+- **Onion skin.** See the poses before and after the current frame as ghosts. You can also show the first frame as a ghost at all times.
+- **Simple timeline.** One row of keys for the whole pose. Drag keys to move them, Alt+drag to copy, right-click for easing. Set a preview range to loop part of a clip.
+- **Snapping.** In front, side or top view, handles snap to a grid and bones turn in fixed steps.
+- **Walk cycles.** Mirror a pose, or key the mirrored pose half a cycle later with one key.
+- **Reference.** Put an image or video behind the model. Videos follow the playhead.
+- **Plays like Blender.** Playback uses the same curves and easing as Blender. The tests check this against Blender.
 
-## Your .blend stays yours
+## Saving
 
-- The file is copied to `.meshanimate-backups/` next to it before every save (newest 20 kept).
-- Only actions you changed are rewritten, and within them only the bones you touched. Everything else in the file is left exactly as it was.
-- New actions get a fake user and their own NLA track; renamed clips rename their track.
-- If you save the same file from Blender while it's open here, MeshAnimate notices. It reloads by itself when you have no unsaved work, and otherwise offers to merge.
+- Before each save, the `.blend` is copied to `.meshanimate-backups/` next to it. The last 20 copies are kept.
+- Only the actions you changed are saved, and only the bones you changed in them. The rest of the file is not touched.
+- New actions get a fake user and their own NLA track. Renaming a clip renames its track.
+- If the file is saved in Blender while it's open here, MeshAnimate notices. It reloads if you have no unsaved work. If you do, it asks whether to merge.
 
 ## Requirements
 
-- [Blender](https://www.blender.org/download/) installed — tested with 5.2; the scripts also handle the older 4.x animation API but that hasn't been tested yet. MeshAnimate uses Blender in the background to read and write `.blend` files and finds it automatically (or point it there under Preferences).
-- A `.blend` with an armature. Skinned meshes and rigid parts parented to bones both work.
+- [Blender](https://www.blender.org/download/), tested with 5.2. Older 4.x versions may work but are untested. MeshAnimate runs Blender in the background to open and save `.blend` files. It finds Blender on its own, or you can set the path in Preferences.
+- A `.blend` with an armature. Skinned meshes and parts parented to bones both work.
 
-Rigs that drive their mesh through other constraints (Rigify's Copy Transforms, Stretch To and drivers, for example) can be animated and saved, but the viewport preview is only approximate for them; MeshAnimate says so when it opens one.
+Some rigs move the mesh with other constraints, like Rigify's Copy Transforms, Stretch To or drivers. You can still animate and save them, but the preview may not match Blender exactly. MeshAnimate tells you when this is the case.
 
-## Keys worth knowing
+## Shortcuts
 
 | Key | Action |
 | --- | --- |
 | Space | Play / pause |
-| ← / → · Shift+← / → | Previous / next frame · key |
+| ← / → | Previous / next frame |
+| Shift+← / → | Previous / next key |
 | K | Key the current pose |
-| M · Shift+M | Mirror pose · mirror to half-cycle |
-| S | Snapping on / off (hold Ctrl to flip it for one drag) |
+| M | Mirror pose |
+| Shift+M | Mirror to half-cycle |
+| S | Snapping on / off (hold Ctrl to switch it for one drag) |
 | Num 1 / 3 / 7 | Front / side / top view (Ctrl: opposite side) |
-| [ · ] · \\ | Preview range start · end · clear |
-| Q / E / W | Pose handles / rotate gizmo / move gizmo |
-| O · Shift+O | Onion skin · first-frame ghost |
+| [ / ] | Preview range start / end |
+| \\ | Clear preview range |
+| Q / E / W | Pose / rotate / move tool |
+| O | Onion skin |
+| Shift+O | First-frame ghost |
 | Ctrl+S | Save into the .blend |
 
 Press `?` in the app for the full list.
@@ -83,11 +87,15 @@ Press `?` in the app for the full list.
 ```bash
 bun install        # or npm install
 bun run dev        # run with hot reload
-bun run test       # unit tests, including Blender parity fixtures
+bun run test       # unit tests
 bun run build:linux   # or build:win / build:mac
 ```
 
-Electron + Solid + three.js. The Blender side lives in `resources/blender/` (one script reads a `.blend`, one writes actions back); the rest is under `src/`.
+Built with Electron, Solid and three.js. The Blender scripts are in `resources/blender/`: one loads a `.blend`, one saves actions to it. The app is in `src/`.
+
+## Translations
+
+All app text is in [src/shared/i18n/en.ts](src/shared/i18n/en.ts). To add a language, copy that file (for example to `de.ts`), translate the values, and add it to `dictionaries` in [src/shared/i18n/index.ts](src/shared/i18n/index.ts). The app picks the system language when it has a translation for it, and falls back to English for anything missing.
 
 ## License
 

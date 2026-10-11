@@ -54,7 +54,7 @@ linux:
   category: Graphics;3DGraphics;Development;
   maintainer: Stuyk
   synopsis: Pose-to-pose 3D mesh animation studio
-  description: Pivot-style keyframe animation for rigged 3D meshes with onion skinning and a clear timeline.
+  description: Pose-to-pose animation for rigged Blender characters.
   artifactName: ${productName}-Linux-${version}.${ext}
 
 appImage:

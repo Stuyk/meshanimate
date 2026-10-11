@@ -2,7 +2,7 @@
  * Last path segment of a file path, for display.
  *
  * Splits on BOTH separators: Windows hands back `C:\Users\me\textures\rock.png`,
- * and splitting on '/' alone leaves the whole path as the "filename" — which is
+ * and splitting on '/' alone leaves the whole path as the "filename", which is
  * how full paths ended up filling the texture shelf on Windows while looking
  * fine on Linux and macOS. A data URL has no meaningful name, so it gets a
  * generic one rather than a screenful of base64.

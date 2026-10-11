@@ -1,6 +1,7 @@
 import { Show, type JSX } from 'solid-js'
 import { SearchIcon, XIcon } from '../icons'
 import Kbd from './Kbd'
+import { t } from '../../i18n'
 
 export interface SearchInputProps {
   value: string
@@ -24,7 +25,7 @@ export default function SearchInput(props: SearchInputProps): JSX.Element {
         type="text"
         value={props.value}
         onInput={(e) => props.onInput(e.currentTarget.value)}
-        placeholder={props.placeholder ?? 'Search...'}
+        placeholder={props.placeholder ?? t('common.search')}
         autofocus={props.autoFocus}
         class="w-full h-7 pl-7 pr-7 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-[var(--ui-radius)] text-[11px] text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-color)] focus:ring-1 focus:ring-[var(--accent-color)] transition-colors"
       />
@@ -36,7 +37,7 @@ export default function SearchInput(props: SearchInputProps): JSX.Element {
             inputRef?.focus()
           }}
           class="absolute right-1.5 p-0.5 rounded-[2px] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/10 transition-colors cursor-pointer"
-          title="Clear search"
+          title={t('common.clearSearch')}
         >
           <XIcon size={11} />
         </button>

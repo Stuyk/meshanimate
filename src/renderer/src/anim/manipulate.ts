@@ -26,7 +26,7 @@ export function rotateJointWorld(joint: THREE.Object3D, delta: THREE.Quaternion)
 
 /**
  * Swings the chain of joints that ends at `effector` so the effector moves
- * towards `target`. A chain of one is plain Pivot-style FK — the segment
+ * towards `target`. A chain of one is plain Pivot-style FK: the segment
  * turns about its pivot; longer chains are CCD IK (bend the elbow and the
  * shoulder to reach). Joint lengths never change; only rotations do.
  */
@@ -77,7 +77,7 @@ function basisMatrix(j: JointPose): THREE.Matrix4 {
  * Done on the geometry rather than on pose channels: each bone takes its
  * partner's posed armature-space transform, reflected, then corrected by how
  * the two bones' rest frames differ. That makes it exact whatever the bone
- * rolls are — a plain channel flip (Blender's Paste Flipped) assumes rolls
+ * rolls are. A plain channel flip (Blender's Paste Flipped) assumes rolls
  * mirror each other, which real rigs don't always do. Needs only a rest pose
  * that is itself symmetric. Unpaired bones mirror onto themselves.
  */

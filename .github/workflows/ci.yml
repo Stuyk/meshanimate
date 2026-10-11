@@ -101,7 +101,7 @@ jobs:
             size=$(stat -c%s "$f" 2>/dev/null || stat -f%z "$f")
             echo "$f: $size bytes"
             if [ "$size" -lt 1000000 ]; then
-              echo "::error::$f is only $size bytes — build likely corrupted"
+              echo "::error::$f is only $size bytes. The build is probably broken."
               exit 1
             fi
           done

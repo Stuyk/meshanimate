@@ -32,6 +32,7 @@ import {
   ToggleSwitch,
   SegmentedControl
 } from './ui'
+import { t, tr } from '../i18n'
 
 const AXIS_COLORS = ['#ff5c5c', '#5ad15a', '#4d9bff']
 
@@ -39,15 +40,18 @@ function ClipsSection(): JSX.Element {
   const [renaming, setRenaming] = createSignal<string | null>(null)
   return (
     <PanelSection
-      title="Clips"
+      title={t('clips.title')}
       icon={ClapperboardIcon}
       badge={studio.clips().length}
       actions={
         <IconButton
           size="xs"
-          tooltip="New clip"
+          tooltip={t('clips.newClip')}
           onClick={() =>
-            studio.addClip(`Clip ${studio.clips().length + 1}`, studio.rig()?.rest ?? null)
+            studio.addClip(
+              t('clips.defaultName', { n: studio.clips().length + 1 }),
+              studio.rig()?.rest ?? null
+            )
           }
         >
           <PlusIcon size={13} />
@@ -107,12 +111,12 @@ function ClipsSection(): JSX.Element {
                   />
                 </Show>
                 <span class="font-mono text-[10px] opacity-70">
-                  {clip.keys.length}k · {clip.length}f
+                  {t('clips.meta', { keys: clip.keys.length, length: clip.length })}
                 </span>
                 <div class="flex opacity-0 group-hover:opacity-100 transition-opacity">
                   <IconButton
                     size="xs"
-                    tooltip="Rename"
+                    tooltip={t('common.rename')}
                     onClick={(e) => {
                       e.stopPropagation()
                       setRenaming(clip.id)
@@ -122,7 +126,7 @@ function ClipsSection(): JSX.Element {
                   </IconButton>
                   <IconButton
                     size="xs"
-                    tooltip="Duplicate"
+                    tooltip={t('common.duplicate')}
                     onClick={(e) => {
                       e.stopPropagation()
                       studio.duplicateClip(clip.id)
@@ -133,7 +137,7 @@ function ClipsSection(): JSX.Element {
                   <Show when={studio.clips().length > 1}>
                     <IconButton
                       size="xs"
-                      tooltip="Delete clip"
+                      tooltip={t('clips.deleteClip')}
                       onClick={(e) => {
                         e.stopPropagation()
                         studio.deleteClip(clip.id)
@@ -175,7 +179,7 @@ function SkeletonSection(): JSX.Element {
     }
     const depth = new Map<string, number>()
     const q = filter().trim().toLowerCase()
-    // By Blender bone name — node names are glTF-sanitized ("Arm.L" → "ArmL").
+    // By Blender bone name, node names are glTF-sanitized ("Arm.L" → "ArmL").
     return [...rig.jointByName.keys()]
       .map((name) => {
         const p = rig.parentOf.get(name)
@@ -187,9 +191,13 @@ function SkeletonSection(): JSX.Element {
   })
 
   return (
-    <PanelSection title="Skeleton" icon={BoneIcon} badge={studio.rig()?.jointByName.size ?? 0}>
+    <PanelSection
+      title={t('skeleton.title')}
+      icon={BoneIcon}
+      badge={studio.rig()?.jointByName.size ?? 0}
+    >
       <Show when={(studio.rig()?.jointByName.size ?? 0) > 8}>
-        <SearchInput value={filter()} onInput={setFilter} placeholder="Find joint…" />
+        <SearchInput value={filter()} onInput={setFilter} placeholder={t('skeleton.find')} />
       </Show>
       <div class="flex flex-col -mx-1 max-h-[240px] overflow-y-auto dcc-scroll font-mono text-[11px]">
         <For each={rows()}>
@@ -198,7 +206,7 @@ function SkeletonSection(): JSX.Element {
             const hidden = (): boolean => !!studio.rig()?.bones.get(r.name)?.hidden
             return (
               <button
-                title={hidden() ? `${r.name} is hidden in Blender` : r.name}
+                title={hidden() ? t('skeleton.hiddenInBlender', { bone: r.name }) : r.name}
                 type="button"
                 class={`flex items-center gap-1 h-6 pr-2 rounded-[2px] text-left cursor-pointer transition-colors ${
                   sel()
@@ -220,7 +228,9 @@ function SkeletonSection(): JSX.Element {
                   <EyeOffIcon size={10} class="ml-auto shrink-0 opacity-60" />
                 </Show>
                 <Show when={studio.rig()?.ikDriven.has(r.name)}>
-                  <span class="ml-auto text-[9px] font-sans font-bold text-amber-400/80">IK</span>
+                  <span class="ml-auto text-[9px] font-sans font-bold text-amber-400/80">
+                    {t('skeleton.ikBadge')}
+                  </span>
                 </Show>
               </button>
             )
@@ -282,35 +292,26 @@ function JointSection(): JSX.Element {
   }
 
   return (
-    <PanelSection title="Bone" icon={FigureIcon} summary={name()}>
+    <PanelSection title={t('bone.title')} icon={FigureIcon} summary={name()}>
       <Show
         when={channels()}
         fallback={
-          <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
-            Click a handle in the viewport, a body part, or a row in the skeleton list to select a
-            bone.
-          </p>
+          <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">{t('bone.empty')}</p>
         }
       >
         <div class="space-y-1.5">
           <Show when={driver()}>
             {(c) => (
               <div class="p-2 rounded-[var(--ui-radius)] border border-amber-500/40 bg-amber-500/10 text-[11px] text-amber-200 leading-relaxed">
-                Driven by IK on <b>{c().owner}</b>. Drag its orange ring (or move{' '}
-                <b>{c().target}</b>) to pose this limb
-                {c().pole ? (
-                  <>
-                    ; the knee/elbow follows <b>{c().pole}</b>
-                  </>
-                ) : null}
-                .
+                {tr('bone.drivenByIk', { owner: <b>{c().owner}</b>, target: <b>{c().target}</b> })}
+                {c().pole ? <> {tr('bone.pointsAtPole', { pole: <b>{c().pole}</b> })}</> : null}
                 <div class="flex gap-1 pt-1.5">
                   <Button size="xs" onClick={() => studio.setSelectedJoint(c().target)}>
-                    Select target
+                    {t('bone.selectTarget')}
                   </Button>
                   <Show when={c().pole}>
                     <Button size="xs" onClick={() => studio.setSelectedJoint(c().pole)}>
-                      Select pole
+                      {t('bone.selectPole')}
                     </Button>
                   </Show>
                 </div>
@@ -320,13 +321,14 @@ function JointSection(): JSX.Element {
           <Show when={role() !== 'bone' && targetOf()}>
             {(c) => (
               <div class="text-[11px] text-[var(--text-muted)]">
-                {role() === 'ikTarget' ? 'IK target' : 'Pole target'} for{' '}
-                <b class="text-[var(--text-main)]">{c().owner}</b> — drag it in the viewport.
+                {tr(role() === 'ikTarget' ? 'bone.ikTargetFor' : 'bone.poleTargetFor', {
+                  owner: <b class="text-[var(--text-main)]">{c().owner}</b>
+                })}
               </div>
             )}
           </Show>
           <div class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-            Location
+            {t('bone.location')}
           </div>
           <div class="grid grid-cols-3 gap-1">
             <For each={[0, 1, 2]}>
@@ -344,7 +346,7 @@ function JointSection(): JSX.Element {
           </div>
           <Show when={!driver()}>
             <div class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] pt-1">
-              Rotation°
+              {t('bone.rotation')}
             </div>
             <div class="grid grid-cols-3 gap-1">
               <For each={[0, 1, 2]}>
@@ -361,9 +363,7 @@ function JointSection(): JSX.Element {
               </For>
             </div>
           </Show>
-          <div class="text-[10px] text-[var(--text-muted)]">
-            Pose channels, as in Blender's Bone panel (relative to rest).
-          </div>
+          <div class="text-[10px] text-[var(--text-muted)]">{t('bone.sameAsBlender')}</div>
           <div class="flex gap-1 pt-1">
             <Button
               size="xs"
@@ -371,7 +371,7 @@ function JointSection(): JSX.Element {
               icon={<RefreshCwIcon size={12} />}
               onClick={() => resetToRest(name()!)}
             >
-              Clear transform
+              {t('bone.clearTransform')}
             </Button>
           </div>
         </div>
@@ -384,19 +384,24 @@ function RigSection(): JSX.Element {
   const rig = (): ReturnType<typeof studio.rig> => studio.rig()
   return (
     <Show when={rig() && (rig()!.ik.length > 0 || rig()!.warnings.length > 0)}>
-      <PanelSection title="Rig" icon={BoneIcon} defaultOpen={false} badge={rig()!.ik.length}>
+      <PanelSection
+        title={t('rig.title')}
+        icon={BoneIcon}
+        defaultOpen={false}
+        badge={rig()!.ik.length}
+      >
         <For each={rig()!.ik}>
           {(c) => (
             <button
               type="button"
               class="flex flex-col w-full text-left p-1.5 rounded-[var(--ui-radius)] hover:bg-white/5 cursor-pointer"
               onClick={() => studio.setSelectedJoint(c.target)}
-              title="Select the IK target"
+              title={t('rig.selectIkTarget')}
             >
               <span class="text-[11px] font-semibold text-[var(--text-main)]">
-                IK · {c.owner}{' '}
+                {t('rig.ikChain', { owner: c.owner })}{' '}
                 <span class="text-[var(--text-muted)] font-normal">
-                  ({c.chainCount || '∞'} bones)
+                  {c.chainCount ? t('rig.chainBones', { count: c.chainCount }) : t('rig.chainAll')}
                 </span>
               </span>
               <span class="text-[10px] text-[var(--text-muted)]">
@@ -408,7 +413,7 @@ function RigSection(): JSX.Element {
         </For>
         <Show when={rig()!.warnings.length > 0}>
           <p class="text-[10px] text-[var(--text-muted)] leading-snug pt-1">
-            Constraints Blender applies but the preview doesn't:
+            {t('rig.unsupported')}
           </p>
           <div class="flex flex-wrap gap-1">
             <For each={rig()!.warnings}>
@@ -427,23 +432,23 @@ function RigSection(): JSX.Element {
 
 function PoseSection(): JSX.Element {
   return (
-    <PanelSection title="Pose" icon={FigureIcon}>
+    <PanelSection title={t('pose.title')} icon={FigureIcon}>
       <div class="grid grid-cols-2 gap-1">
         <Button
           size="xs"
           icon={<MirrorIcon size={12} />}
           onClick={mirrorLivePose}
-          title="Swap left and right sides (M)"
+          title={t('pose.mirrorTitle')}
         >
-          Mirror
+          {t('pose.mirror')}
         </Button>
         <Button
           size="xs"
           icon={<RefreshCwIcon size={12} />}
           onClick={() => resetToRest()}
-          title="Back to the model's rest pose"
+          title={t('pose.restTitle')}
         >
-          Rest pose
+          {t('pose.rest')}
         </Button>
       </div>
     </PanelSection>
@@ -457,19 +462,23 @@ function SnapSection(): JSX.Element {
   const snap = studio.snap
   return (
     <PanelSection
-      title="Snapping"
+      title={t('snapping.title')}
       icon={MagnetIcon}
-      summary={snap().enabled ? `${studio.viewPlane()} view` : 'Off'}
+      summary={
+        snap().enabled
+          ? t('snapping.summaryOn', { plane: t(`snap.planes.${studio.viewPlane()}`) })
+          : t('snapping.summaryOff')
+      }
     >
       <ToggleSwitch
-        label="Snap while posing (S)"
-        description="Drags stay in the view's side, front or top plane. Hold Ctrl to flip for one drag."
+        label={t('snapping.toggle')}
+        description={t('snapping.toggleHelp')}
         icon={MagnetIcon}
         checked={snap().enabled}
         onChange={(enabled) => studio.setSnap({ enabled })}
       />
       <div class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-        Grid — targets, poles, the root
+        {t('snapping.grid')}
       </div>
       <SegmentedControl
         size="xs"
@@ -479,7 +488,7 @@ function SnapSection(): JSX.Element {
         options={GRID_STEPS.map((g) => ({ value: g, label: formatGrid(g).replace(' ', '') }))}
       />
       <div class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-        Angle — swinging a bone
+        {t('snapping.angle')}
       </div>
       <SegmentedControl
         size="xs"
@@ -488,10 +497,7 @@ function SnapSection(): JSX.Element {
         onChange={(angle) => studio.setSnap({ angle })}
         options={ANGLE_STEPS.map((a) => ({ value: a, label: `${a}°` }))}
       />
-      <p class="text-[10px] text-[var(--text-muted)] leading-snug">
-        Line the view up first — numpad 1 / 3 / 7 (front / side / top), Ctrl for the opposite side,
-        or click the cube.
-      </p>
+      <p class="text-[10px] text-[var(--text-muted)] leading-snug">{t('snapping.viewTip')}</p>
     </PanelSection>
   )
 }
@@ -503,9 +509,9 @@ async function pickReference(): Promise<void> {
   const paths = await window.api.openFileDialog({
     key: 'reference',
     filters: [
-      { name: 'Images and videos', extensions: [...IMAGE_TYPES, ...VIDEO_TYPES] },
-      { name: 'Images', extensions: IMAGE_TYPES },
-      { name: 'Videos', extensions: VIDEO_TYPES }
+      { name: t('files.imagesAndVideos'), extensions: [...IMAGE_TYPES, ...VIDEO_TYPES] },
+      { name: t('files.images'), extensions: IMAGE_TYPES },
+      { name: t('files.videos'), extensions: VIDEO_TYPES }
     ]
   })
   const path = paths?.[0]
@@ -532,7 +538,7 @@ function ReferenceSection(): JSX.Element {
   }
   return (
     <PanelSection
-      title="Reference"
+      title={t('reference.title')}
       icon={ImagesIcon}
       defaultOpen={false}
       summary={ref() ? (ref()!.path.split(/[\\/]/).pop() ?? null) : null}
@@ -542,8 +548,7 @@ function ReferenceSection(): JSX.Element {
         fallback={
           <>
             <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
-              Put a sketch, photo or video behind the model to pose against. Videos follow the
-              playhead frame by frame. Remembered for this file; never saved into it.
+              {t('reference.empty')}
             </p>
             <Button
               size="xs"
@@ -551,19 +556,19 @@ function ReferenceSection(): JSX.Element {
               icon={<ImagesIcon size={12} />}
               onClick={() => void pickReference()}
             >
-              Load image or video…
+              {t('reference.load')}
             </Button>
           </>
         }
       >
         <ToggleSwitch
-          label="Show reference"
+          label={t('reference.show')}
           icon={EyeIcon}
           checked={ref()!.visible}
           onChange={(visible) => patch({ visible })}
         />
         <Slider
-          label="Opacity"
+          label={t('reference.opacity')}
           value={ref()!.opacity}
           min={0.05}
           max={1}
@@ -573,7 +578,7 @@ function ReferenceSection(): JSX.Element {
         />
         <Show when={ref()!.kind === 'video'}>
           <div class="flex items-center justify-between gap-2 text-[11px]">
-            <span class="text-[var(--text-muted)]">Video starts at clip frame</span>
+            <span class="text-[var(--text-muted)]">{t('reference.videoStart')}</span>
             <NumberInput
               class="w-20"
               value={ref()!.offset + (studio.activeClip()?.start ?? 0)}
@@ -585,10 +590,10 @@ function ReferenceSection(): JSX.Element {
         </Show>
         <div class="grid grid-cols-2 gap-1">
           <Button size="xs" onClick={() => void pickReference()}>
-            Replace…
+            {t('common.replace')}
           </Button>
           <Button size="xs" variant="ghost" onClick={() => studio.setReference(null)}>
-            Remove
+            {t('common.remove')}
           </Button>
         </div>
       </Show>
@@ -599,29 +604,29 @@ function ReferenceSection(): JSX.Element {
 function DisplaySection(): JSX.Element {
   const d = studio.display
   return (
-    <PanelSection title="Display" icon={EyeIcon} defaultOpen={false}>
+    <PanelSection title={t('display.title')} icon={EyeIcon} defaultOpen={false}>
       <ToggleSwitch
-        label="First-frame ghost (Shift+O)"
-        description="Keep the clip's starting pose visible at every frame"
+        label={t('display.firstFrame')}
+        description={t('display.firstFrameHelp')}
         icon={GhostIcon}
         checked={d().showFirstFrame}
         onChange={(v) => studio.setDisplay({ ...d(), showFirstFrame: v })}
       />
       <ToggleSwitch
-        label="Show bones hidden in Blender"
-        description="Bones you hid in Blender, or whose bone collections are hidden"
+        label={t('display.showHidden')}
+        description={t('display.showHiddenHelp')}
         icon={EyeOffIcon}
         checked={d().showHidden}
         onChange={(v) => studio.setDisplay({ ...d(), showHidden: v })}
       />
       <ToggleSwitch
-        label="Skeleton & handles"
+        label={t('display.skeleton')}
         icon={BoneIcon}
         checked={d().showSkeleton}
         onChange={(v) => studio.setDisplay({ ...d(), showSkeleton: v })}
       />
       <Slider
-        label="Handle size"
+        label={t('display.handleSize')}
         value={d().jointSize}
         min={0.5}
         max={2.5}
@@ -630,7 +635,7 @@ function DisplaySection(): JSX.Element {
         onChange={(v) => studio.setDisplay({ ...d(), jointSize: v })}
       />
       <Slider
-        label="Mesh opacity"
+        label={t('display.meshOpacity')}
         value={d().meshOpacity}
         min={0.1}
         max={1}
@@ -639,10 +644,10 @@ function DisplaySection(): JSX.Element {
         onChange={(v) => studio.setDisplay({ ...d(), meshOpacity: v })}
       />
       <div class="flex items-center gap-1.5 pt-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-        <GhostIcon size={12} /> Onion skin
+        <GhostIcon size={12} /> {t('display.onionSkin')}
       </div>
       <Slider
-        label="Ghost strength"
+        label={t('display.ghostStrength')}
         value={studio.onion().opacity}
         min={0.05}
         max={0.8}

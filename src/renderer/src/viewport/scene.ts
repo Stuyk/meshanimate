@@ -12,7 +12,7 @@ export interface SceneHandle {
   setSeeThrough: (on: boolean) => void
   /**
    * Fits the shadow camera and the ground catcher around the model. Called
-   * whenever a model loads or changes size — a directional light's shadow
+   * whenever a model loads or changes size, a directional light's shadow
    * camera is an orthographic box, and one sized for the wrong model either
    * clips the shadow or wastes the whole depth map on empty space.
    */
@@ -172,7 +172,7 @@ export class OrbitPanZoomControls {
     this.syncSphericalFromCamera()
     const goal = new THREE.Spherical().setFromVector3(direction.clone().normalize())
     // Straight up/down would put the camera on the pole, where lookAt has no
-    // defined "up" and the view spins — stop just short, like orbitBy does.
+    // defined "up" and the view spins. Stop just short, like orbitBy does.
     goal.phi = Math.max(0.001, Math.min(Math.PI - 0.001, goal.phi))
     const startTheta = this.spherical.theta
     const startPhi = this.spherical.phi
@@ -381,7 +381,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
   key.position.set(...DEFAULT_KEY_POSITION)
   key.castShadow = true
   key.shadow.mapSize.set(2048, 2048)
-  // A painted surface is exactly where shadow acne shows worst — it stripes the
+  // A painted surface is exactly where shadow acne shows worst. It stripes the
   // texture the artist is judging. normalBias pushes the comparison along the
   // surface normal, which handles curved and grazing-lit geometry far better
   // than a constant depth bias alone; the small negative bias cleans up the rest
@@ -438,7 +438,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
   // Image-based lighting. Roughness and metalness are only legible against a
   // varied environment: a metal surface renders as whatever it reflects, and
   // with directional lights alone it has nothing to reflect but a couple of
-  // point highlights on black — so a painted metalness map would look like
+  // point highlights on black, so a painted metalness map would look like
   // dark grey paint rather than metal. RoomEnvironment is generated in-process
   // (no HDRI file to ship or fetch) and prefiltered once into a PMREM cubemap.
   const pmrem = new THREE.PMREMGenerator(renderer)
@@ -452,7 +452,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
   /**
    * Invisible ground that receives the model's shadow. ShadowMaterial renders
    * nothing but the shadow itself, so the plane never hides the grid or shifts
-   * the background color — the model just gains something to sit on.
+   * the background color. The model just gains something to sit on.
    */
   const shadowCatcherMaterial = new THREE.ShadowMaterial({ opacity: 0.25, transparent: true })
   const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shadowCatcherMaterial)

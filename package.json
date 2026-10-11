@@ -1,8 +1,8 @@
 {
   "name": "meshanimate",
   "productName": "MeshAnimate",
-  "version": "0.1.0",
-  "description": "Pose-to-pose 3D mesh animation studio",
+  "version": "1.0.0",
+  "description": "Pose-to-pose animation for rigged Blender characters",
   "main": "./out/main/index.js",
   "author": "Stuyk",
   "license": "GPL-3.0-or-later",

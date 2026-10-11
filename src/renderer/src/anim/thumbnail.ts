@@ -49,7 +49,7 @@ function setup(rig: Rig): ThumbRig {
 }
 
 /**
- * A small side-view stick figure of a pose, constraints included — enough to
+ * A small side-view stick figure of a pose, constraints included, enough to
  * tell clips apart at a glance without rendering the mesh.
  */
 export function poseThumbnail(rig: Rig, pose: Pose, width = 56, height = 40): string {

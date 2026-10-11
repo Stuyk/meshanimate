@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { ikChain, solveIk, type IkConstraint, type IkContext } from './ik'
 import { clonePose, IDENTITY_JOINT } from './pose'
 import { UNIT_SCALE, type Easing, type JointPose, type Pose, type Quat, type Vec3 } from './types'
+import { t } from '../i18n'
 
 // ---------------------------------------------------------------------------
 // What meshanimate_load.py reports about a .blend
@@ -53,7 +54,7 @@ export interface BlendMeta {
   frameStart: number
   armature: string
   bones: BlendBone[]
-  /** Each bone's pose as stored in the file — shown where an action doesn't key it. */
+  /** Each bone's pose as stored in the file, shown where an action doesn't key it. */
   storedPose?: Pose
   actions: BlendAction[]
   activeAction: string | null
@@ -102,7 +103,7 @@ export interface Rig {
   warnings: string[]
   /** Those constraints move the mesh, so the viewport only approximates Blender. */
   previewApproximate: boolean
-  /** The live pose channels — what gets keyed. */
+  /** The live pose channels. These get keyed. */
   basis: Pose
 }
 
@@ -181,7 +182,7 @@ function readConstraints(bones: BlendBone[]): {
  * Whether constraints the preview doesn't evaluate move the mesh: they sit on
  * a deforming bone or above one. Rigs like Rigify drive their deform bones
  * entirely through such constraints, so the viewport can't show what Blender
- * will — though the keys themselves still save exactly.
+ * will. The keys still save exactly.
  */
 function meshDrivenByUnsupported(
   bones: BlendBone[],
@@ -243,7 +244,7 @@ export async function loadRig(glbUrl: string, meta: BlendMeta, blendPath: string
   const bones = new Map(meta.bones.map((b) => [b.name, b]))
   const missing = meta.bones.filter((b) => !nodes.has(b.name)).map((b) => b.name)
   if (missing.length > 0) {
-    throw new Error(`Bones missing from the display model: ${missing.slice(0, 5).join(', ')}`)
+    throw new Error(t('errors.bonesMissing', { bones: missing.slice(0, 5).join(', ') }))
   }
 
   // Parents before children, in Blender's own bone order otherwise.
@@ -352,7 +353,7 @@ export function ikContext(rig: Rig, joints: Map<string, THREE.Object3D>): IkCont
 
 /**
  * Poses any copy of the rig (the live one, onion ghosts): pose channels on
- * top of rest, then constraints — the order Blender evaluates an armature in.
+ * top of rest, then constraints, the order Blender evaluates an armature in.
  */
 export function evaluatePose(
   rig: Rig,

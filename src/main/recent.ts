@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { t } from './i18n'
 
 export interface RecentEntry {
   projectPath: string
@@ -39,7 +40,7 @@ export function addRecentProject(
   type?: 'project' | 'model'
 ): void {
   const entries = load().filter((e) => e.projectPath !== projectPath)
-  const resolvedName = name || projectPath.split(/[/\\]/).pop() || 'Untitled'
+  const resolvedName = name || projectPath.split(/[/\\]/).pop() || t('common.untitled')
   const resolvedType = type || (projectPath.endsWith('.meshanim') ? 'project' : 'model')
   entries.push({
     projectPath,

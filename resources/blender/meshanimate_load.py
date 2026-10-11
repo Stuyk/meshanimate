@@ -88,7 +88,7 @@ bone_names = {b.name for b in arm.data.bones}
 
 
 def stored_channels(pb):
-    """The pose values saved in the file — what a bone shows when an action doesn't key it."""
+    """The pose values saved in the file: what a bone shows when an action doesn't key it."""
     from mathutils import Quaternion
     if pb.rotation_mode == "QUATERNION":
         q = pb.rotation_quaternion.copy()

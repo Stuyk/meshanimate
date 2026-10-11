@@ -14,6 +14,7 @@ import {
 import { DropdownMenu, IconButton, type MenuItem } from './ui'
 import type { LightingMode } from '../viewport/scene'
 import { studio } from '../anim/studio'
+import { t } from '../i18n'
 
 export interface AppHeaderProps {
   docName: string
@@ -26,39 +27,13 @@ export interface AppHeaderProps {
   onOpenSettings: () => void
 }
 
-const LIGHTING_OPTIONS: { value: LightingMode; label: string; subtitle: string; swatch: string }[] =
-  [
-    {
-      value: 'neutral',
-      label: 'Neutral',
-      subtitle: 'Balanced 3-point studio',
-      swatch: 'linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%)'
-    },
-    {
-      value: 'flat',
-      label: 'Flat',
-      subtitle: 'Even light, soft shadows',
-      swatch: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)'
-    },
-    {
-      value: 'outdoor',
-      label: 'Outdoor',
-      subtitle: 'Sunlight & sky fill',
-      swatch: 'linear-gradient(135deg, #fbbf24 0%, #38bdf8 100%)'
-    },
-    {
-      value: 'warm',
-      label: 'Warm',
-      subtitle: 'Tungsten & amber glow',
-      swatch: 'linear-gradient(135deg, #fb923c 0%, #ea580c 100%)'
-    },
-    {
-      value: 'cool',
-      label: 'Cool',
-      subtitle: 'Blue hour & cyan rim',
-      swatch: 'linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%)'
-    }
-  ]
+const LIGHTING_OPTIONS: { value: LightingMode; swatch: string }[] = [
+  { value: 'neutral', swatch: 'linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%)' },
+  { value: 'flat', swatch: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)' },
+  { value: 'outdoor', swatch: 'linear-gradient(135deg, #fbbf24 0%, #38bdf8 100%)' },
+  { value: 'warm', swatch: 'linear-gradient(135deg, #fb923c 0%, #ea580c 100%)' },
+  { value: 'cool', swatch: 'linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%)' }
+]
 
 export default function AppHeader(props: AppHeaderProps): JSX.Element {
   const [openMenu, setOpenMenu] = createSignal<string | null>(null)
@@ -70,7 +45,9 @@ export default function AppHeader(props: AppHeaderProps): JSX.Element {
       <div class="flex items-center gap-3 min-w-0">
         <div class="flex items-center gap-2 pr-3 border-r border-[var(--border-color)] shrink-0">
           <AppIcon size={18} class="shrink-0" />
-          <span class="font-bold text-xs tracking-tight hidden sm:inline">MeshAnimate</span>
+          <span class="font-bold text-xs tracking-tight hidden sm:inline">
+            {t('common.appName')}
+          </span>
           <span class="text-[var(--text-muted)]">/</span>
           <span
             class="font-medium text-[var(--text-muted)] max-w-[220px] truncate"
@@ -115,7 +92,7 @@ export default function AppHeader(props: AppHeaderProps): JSX.Element {
             size="xs"
             variant="ghost"
             disabled={!studio.canUndo()}
-            tooltip="Undo (Ctrl+Z)"
+            tooltip={t('header.undo')}
             onClick={() => studio.undo()}
           >
             <UndoIcon size={14} />
@@ -124,7 +101,7 @@ export default function AppHeader(props: AppHeaderProps): JSX.Element {
             size="xs"
             variant="ghost"
             disabled={!studio.canRedo()}
-            tooltip="Redo (Ctrl+Shift+Z)"
+            tooltip={t('header.redo')}
             onClick={() => studio.redo()}
           >
             <RedoIcon size={14} />
@@ -142,13 +119,16 @@ export default function AppHeader(props: AppHeaderProps): JSX.Element {
                 : 'bg-[var(--bg-input)] border-[var(--border-color)] hover:border-white/20'
             }`}
             onClick={() => setOpenMenu((m) => (m === '__light' ? null : '__light'))}
-            title={`Lighting: ${current().label} — ${current().subtitle}`}
+            title={t('header.lighting', {
+              label: t(`lighting.${current().value}.label`),
+              subtitle: t(`lighting.${current().value}.subtitle`)
+            })}
           >
             <span
               class="w-2.5 h-2.5 rounded-full border border-white/20"
               style={{ background: current().swatch }}
             />
-            <span class="font-medium">{current().label}</span>
+            <span class="font-medium">{t(`lighting.${current().value}.label`)}</span>
             <ChevronDownIcon size={12} class="text-[var(--text-muted)]" />
           </button>
           <Show when={openMenu() === '__light'}>
@@ -176,11 +156,13 @@ export default function AppHeader(props: AppHeaderProps): JSX.Element {
                         style={{ background: item.swatch }}
                       />
                       <div class="flex flex-col flex-1 min-w-0">
-                        <span class="font-semibold leading-tight">{item.label}</span>
+                        <span class="font-semibold leading-tight">
+                          {t(`lighting.${item.value}.label`)}
+                        </span>
                         <span
                           class={`text-[10px] leading-tight ${sel() ? 'text-blue-100' : 'text-zinc-400'}`}
                         >
-                          {item.subtitle}
+                          {t(`lighting.${item.value}.subtitle`)}
                         </span>
                       </div>
                       <Show when={sel()}>
@@ -199,7 +181,7 @@ export default function AppHeader(props: AppHeaderProps): JSX.Element {
           size="xs"
           variant="ghost"
           onClick={props.onFrameCamera}
-          tooltip="Frame model (F)"
+          tooltip={t('header.frameModel')}
         >
           <FocusIcon size={15} />
         </IconButton>
@@ -207,19 +189,19 @@ export default function AppHeader(props: AppHeaderProps): JSX.Element {
           size="xs"
           variant="ghost"
           onClick={() => window.api.toggleDevTools()}
-          tooltip="Developer console"
+          tooltip={t('header.devConsole')}
         >
           <DevConsoleIcon size={15} />
-        </IconButton>
-        <IconButton size="xs" variant="ghost" onClick={props.onOpenSettings} tooltip="Preferences">
-          <SettingsIcon size={15} />
         </IconButton>
         <IconButton
           size="xs"
           variant="ghost"
-          onClick={props.onOpenHelp}
-          tooltip="Quick guide & hotkeys (?)"
+          onClick={props.onOpenSettings}
+          tooltip={t('header.preferences')}
         >
+          <SettingsIcon size={15} />
+        </IconButton>
+        <IconButton size="xs" variant="ghost" onClick={props.onOpenHelp} tooltip={t('header.help')}>
           <HelpCircleIcon size={15} />
         </IconButton>
       </div>

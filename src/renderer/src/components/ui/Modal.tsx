@@ -1,5 +1,6 @@
 import { onMount, onCleanup, Show, type JSX } from 'solid-js'
 import { XIcon } from '../icons'
+import { t } from '../../i18n'
 
 export interface ModalProps {
   isOpen: boolean
@@ -57,7 +58,7 @@ export default function Modal(props: ModalProps): JSX.Element {
               type="button"
               class="p-1 rounded-[2px] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/10 transition-colors cursor-pointer"
               onClick={props.onClose}
-              title="Close (Esc)"
+              title={t('common.closeEsc')}
             >
               <XIcon size={14} />
             </button>

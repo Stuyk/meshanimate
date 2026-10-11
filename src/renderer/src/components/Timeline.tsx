@@ -23,6 +23,7 @@ import {
   PasteIcon
 } from './icons'
 import { IconButton, NumberInput, SegmentedControl, Select } from './ui'
+import { t } from '../i18n'
 
 const LABEL_W = 132
 const RULER_H = 24
@@ -342,28 +343,32 @@ export default function Timeline(): JSX.Element {
     >
       {/* Transport + key tools */}
       <div class="h-10 min-h-10 px-2 flex items-center gap-1.5 bg-[var(--bg-panel-header)] border-b border-[var(--border-color)] overflow-x-auto overflow-y-hidden">
-        <IconButton size={btn} tooltip="First frame (Home)" onClick={() => studio.setFrame(0)}>
+        <IconButton
+          size={btn}
+          tooltip={t('timeline.firstFrame')}
+          onClick={() => studio.setFrame(0)}
+        >
           <SkipBackIcon size={14} />
         </IconButton>
-        <IconButton size={btn} tooltip="Previous key (Shift+←)" onClick={() => stepToKey(-1)}>
+        <IconButton size={btn} tooltip={t('timeline.previousKey')} onClick={() => stepToKey(-1)}>
           <StepBackIcon size={14} />
         </IconButton>
         <IconButton
           size="sm"
           variant="primary"
-          tooltip={studio.playing() ? 'Pause (Space)' : 'Play (Space)'}
+          tooltip={studio.playing() ? t('timeline.pause') : t('timeline.play')}
           onClick={() => studio.togglePlay()}
         >
           <Show when={studio.playing()} fallback={<PlayIcon size={15} />}>
             <PauseIcon size={15} />
           </Show>
         </IconButton>
-        <IconButton size={btn} tooltip="Next key (Shift+→)" onClick={() => stepToKey(1)}>
+        <IconButton size={btn} tooltip={t('timeline.nextKey')} onClick={() => stepToKey(1)}>
           <StepForwardIcon size={14} />
         </IconButton>
         <IconButton
           size={btn}
-          tooltip="Last frame (End)"
+          tooltip={t('timeline.lastFrame')}
           onClick={() => studio.setFrame(length() - 1)}
         >
           <SkipForwardIcon size={14} />
@@ -371,7 +376,7 @@ export default function Timeline(): JSX.Element {
         <IconButton
           size={btn}
           toggled={studio.loop()}
-          tooltip={studio.loop() ? 'Looping playback' : 'Play once'}
+          tooltip={studio.loop() ? t('timeline.looping') : t('timeline.playOnce')}
           onClick={() => studio.setLoop(!studio.loop())}
         >
           <RepeatIcon size={14} />
@@ -383,8 +388,11 @@ export default function Timeline(): JSX.Element {
           }
           title={
             studio.previewRange()
-              ? `Preview range ${bf(studio.previewRange()![0])}–${bf(studio.previewRange()![1])}: playback loops here. Click to clear (\\). Drag its edges on the ruler.`
-              : 'Preview range: loop part of the clip while you polish it. [ and ] set its start and end at the playhead.'
+              ? t('timeline.rangeSet', {
+                  start: bf(studio.previewRange()![0]),
+                  end: bf(studio.previewRange()![1])
+                })
+              : t('timeline.rangeUnset')
           }
           class={`h-6 px-1.5 rounded-[var(--ui-radius)] border text-[10px] font-mono font-bold cursor-pointer transition-colors ${
             studio.previewRange()
@@ -393,17 +401,17 @@ export default function Timeline(): JSX.Element {
           }`}
         >
           <Show when={studio.previewRange()} fallback="[ ]">
-            [{bf(studio.previewRange()![0])}–{bf(studio.previewRange()![1])}]
+            [{bf(studio.previewRange()![0])}-{bf(studio.previewRange()![1])}]
           </Show>
         </button>
-        <IconButton size={btn} tooltip="Fit the whole clip in the timeline" onClick={fitTimeline}>
+        <IconButton size={btn} tooltip={t('timeline.fit')} onClick={fitTimeline}>
           <FitIcon size={14} />
         </IconButton>
 
         <div class="w-px h-5 bg-[var(--border-color)] mx-1" />
 
         <div class="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-          <span>Frame</span>
+          <span>{t('timeline.frame')}</span>
           <NumberInput
             class="w-16"
             value={bf(studio.frame())}
@@ -412,10 +420,10 @@ export default function Timeline(): JSX.Element {
             min={start()}
             max={bf(length() - 1)}
             onChange={(v) => studio.setFrame(v - start())}
-            title="Current frame, in Blender's numbering (drag to scrub, double-click to type)"
+            title={t('timeline.frameTitle')}
           />
           <span class="font-mono">/ {bf(length() - 1)}</span>
-          <span class="ml-2">Length</span>
+          <span class="ml-2">{t('timeline.length')}</span>
           <NumberInput
             class="w-16"
             value={length()}
@@ -424,9 +432,9 @@ export default function Timeline(): JSX.Element {
             min={2}
             max={10000}
             onChange={(v) => studio.updateClipMeta({ length: v })}
-            title="Clip length in frames"
+            title={t('timeline.lengthTitle')}
           />
-          <span class="ml-2">FPS</span>
+          <span class="ml-2">{t('timeline.fps')}</span>
           <NumberInput
             class="w-14"
             value={clip()?.fps ?? 24}
@@ -435,10 +443,10 @@ export default function Timeline(): JSX.Element {
             min={1}
             max={120}
             onChange={(v) => studio.setFps(v)}
-            title="Scene frame rate (shared by every action in the .blend)"
+            title={t('timeline.fpsTitle')}
           />
           <span class="font-mono ml-1 tabular-nums">
-            {(studio.frame() / (clip()?.fps ?? 24)).toFixed(2)}s
+            {t('units.seconds', { value: (studio.frame() / (clip()?.fps ?? 24)).toFixed(2) })}
           </span>
         </div>
 
@@ -447,21 +455,17 @@ export default function Timeline(): JSX.Element {
         <IconButton
           size={btn}
           variant={studio.unkeyed() ? 'primary' : 'default'}
-          tooltip="Key the current pose at this frame (K)"
+          tooltip={t('timeline.keyPose')}
           onClick={keyCurrentPose}
         >
           <KeyIcon size={14} />
         </IconButton>
-        <IconButton
-          size={btn}
-          tooltip="Delete selected keys, or the key at the playhead (Del)"
-          onClick={deleteSelectedOrCurrent}
-        >
+        <IconButton size={btn} tooltip={t('timeline.deleteKeys')} onClick={deleteSelectedOrCurrent}>
           <TrashIcon size={14} />
         </IconButton>
         <IconButton
           size={btn}
-          tooltip="Copy pose (Ctrl+C)"
+          tooltip={t('timeline.copyPose')}
           onClick={() => {
             const rig = studio.rig()
             if (rig) {
@@ -474,7 +478,7 @@ export default function Timeline(): JSX.Element {
         <IconButton
           size={btn}
           disabled={!studio.clipboardPose()}
-          tooltip="Paste pose as a key here (Ctrl+V)"
+          tooltip={t('timeline.pastePose')}
           onClick={() => {
             const p = studio.clipboardPose()
             if (p) {
@@ -487,19 +491,19 @@ export default function Timeline(): JSX.Element {
         <Select<Easing | ''>
           size="xs"
           class="w-[104px]"
-          title="Easing into the next key — applies to selected keys"
+          title={t('timeline.easingTitle')}
           value={selectedEasing()}
           disabled={studio.selectedKeyIds().length === 0}
           options={[
-            { value: '', label: 'Easing…', disabled: true },
-            ...EASING_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
+            { value: '', label: t('easing.placeholder'), disabled: true },
+            ...EASING_OPTIONS.map((e) => ({ value: e, label: t(`easing.${e}.label`) }))
           ]}
           onChange={(v) => v && studio.setEasing(studio.selectedKeyIds(), v)}
         />
         <button
           type="button"
           onClick={() => studio.setAutoKey(!studio.autoKey())}
-          title="Auto-key: every pose edit writes a key at the playhead"
+          title={t('timeline.autoKeyTitle')}
           class={`ml-1 flex items-center gap-1.5 h-6 px-2 rounded-[var(--ui-radius)] border text-[11px] font-medium cursor-pointer transition-colors ${
             studio.autoKey()
               ? 'bg-red-500/15 border-red-500/60 text-red-300'
@@ -507,7 +511,7 @@ export default function Timeline(): JSX.Element {
           }`}
         >
           <span class={`w-2 h-2 rounded-full ${studio.autoKey() ? 'bg-red-500' : 'bg-zinc-600'}`} />
-          Auto-key
+          {t('timeline.autoKey')}
         </button>
 
         <div class="w-px h-5 bg-[var(--border-color)] mx-1" />
@@ -515,7 +519,7 @@ export default function Timeline(): JSX.Element {
         <IconButton
           size={btn}
           toggled={studio.display().showFirstFrame}
-          tooltip="First-frame ghost (Shift+O): keep the clip's starting pose visible at every frame"
+          tooltip={t('timeline.firstFrameGhost')}
           onClick={() =>
             studio.setDisplay({
               ...studio.display(),
@@ -528,7 +532,7 @@ export default function Timeline(): JSX.Element {
         <IconButton
           size={btn}
           toggled={studio.onion().enabled}
-          tooltip="Onion skin (O)"
+          tooltip={t('timeline.onionSkin')}
           onClick={() => studio.setOnion({ ...studio.onion(), enabled: !studio.onion().enabled })}
         >
           <GhostIcon size={14} />
@@ -536,7 +540,7 @@ export default function Timeline(): JSX.Element {
         <div
           class={`flex items-center gap-1 text-[11px] text-[var(--text-muted)] ${studio.onion().enabled ? '' : 'opacity-40 pointer-events-none'}`}
         >
-          <span class="text-[#ff7a7a]" title="Ghosts before the playhead">
+          <span class="text-[#ff7a7a]" title={t('timeline.ghostsBeforeTitle')}>
             ◀
           </span>
           <NumberInput
@@ -547,7 +551,7 @@ export default function Timeline(): JSX.Element {
             min={0}
             max={10}
             onChange={(v) => studio.setOnion({ ...studio.onion(), before: v })}
-            title="Ghosts before"
+            title={t('timeline.ghostsBefore')}
           />
           <NumberInput
             class="w-10"
@@ -557,9 +561,9 @@ export default function Timeline(): JSX.Element {
             min={0}
             max={10}
             onChange={(v) => studio.setOnion({ ...studio.onion(), after: v })}
-            title="Ghosts after"
+            title={t('timeline.ghostsAfter')}
           />
-          <span class="text-[#5ab4ff]" title="Ghosts after the playhead">
+          <span class="text-[#5ab4ff]" title={t('timeline.ghostsAfterTitle')}>
             ▶
           </span>
           <SegmentedControl
@@ -567,16 +571,20 @@ export default function Timeline(): JSX.Element {
             value={studio.onion().mode}
             onChange={(mode) => studio.setOnion({ ...studio.onion(), mode })}
             options={[
-              { value: 'keys', label: 'Keys', title: 'Ghost the neighbouring keyed poses' },
+              {
+                value: 'keys',
+                label: t('timeline.onionKeys'),
+                title: t('timeline.onionKeysTitle')
+              },
               {
                 value: 'frames',
-                label: 'Frames',
-                title: 'Ghost every Nth frame around the playhead'
+                label: t('timeline.onionFrames'),
+                title: t('timeline.onionFramesTitle')
               }
             ]}
           />
           <Show when={studio.onion().mode === 'frames'}>
-            <span class="ml-1">every</span>
+            <span class="ml-1">{t('timeline.every')}</span>
             <NumberInput
               class="w-10"
               value={studio.onion().step}
@@ -585,7 +593,7 @@ export default function Timeline(): JSX.Element {
               min={1}
               max={24}
               onChange={(v) => studio.setOnion({ ...studio.onion(), step: v })}
-              title="Frames between ghosts"
+              title={t('timeline.framesBetween')}
             />
           </Show>
         </div>
@@ -601,15 +609,15 @@ export default function Timeline(): JSX.Element {
             class="flex items-center px-2.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border-color)]"
             style={{ height: `${RULER_H}px` }}
           >
-            {clip()?.name ?? '—'}
+            {clip()?.name ?? t('timeline.noClip')}
           </div>
           <div
             class="flex items-center gap-1.5 px-2.5 font-semibold text-[var(--text-main)] border-b border-[var(--border-color)]"
             style={{ height: `${ROW_H}px` }}
-            title="Whole-figure pose keys"
+            title={t('timeline.poseRowTitle')}
           >
             <DiamondIcon size={12} class="text-amber-400" />
-            Pose
+            {t('timeline.poseRow')}
             <span class="ml-auto font-mono text-[10px] text-[var(--text-muted)]">
               {clip()?.keys.length ?? 0}
             </span>
@@ -617,10 +625,10 @@ export default function Timeline(): JSX.Element {
           <div
             class="flex items-center gap-1.5 px-2.5 text-[var(--text-muted)] border-b border-[var(--border-color)]"
             style={{ height: `${ROW_H}px` }}
-            title="Where the selected joint changes between keys"
+            title={t('timeline.jointRowTitle')}
           >
             <BoneIcon size={12} class="text-[var(--accent-color)] shrink-0" />
-            <span class="truncate">{studio.selectedJoint() ?? 'No joint selected'}</span>
+            <span class="truncate">{studio.selectedJoint() ?? t('timeline.noJoint')}</span>
           </div>
         </div>
 
@@ -657,7 +665,7 @@ export default function Timeline(): JSX.Element {
                           style={{
                             left: `${12 + (edge === 0 ? r()[0] : r()[1] + 1) * pxPerFrame()}px`
                           }}
-                          title="Drag to move this end of the preview range"
+                          title={t('timeline.rangeEdge')}
                           onMouseDown={(e) => dragRangeEdge(e, edge)}
                         />
                       )}
@@ -753,7 +761,10 @@ export default function Timeline(): JSX.Element {
                             : 'bg-amber-400 border-[#1a1a1c]'
                         }`}
                         style={{ left: `${xOf(displayFrame(k))}px` }}
-                        title={`Key @ ${bf(k.frame)} — ${EASING_OPTIONS.find((o) => o.value === k.easing)?.label}\nDrag to retime · Alt+drag to copy · Right-click for options`}
+                        title={t('timeline.keyTitle', {
+                          frame: bf(k.frame),
+                          easing: t(`easing.${k.easing}.label`)
+                        })}
                         onMouseDown={(e) => onKeyDown(e, k)}
                         onContextMenu={(e) => onKeyContext(e, k)}
                         onDblClick={(e) => e.stopPropagation()}
@@ -779,11 +790,10 @@ export default function Timeline(): JSX.Element {
                         : 'w-2 h-2 border border-[var(--text-muted)]/60'
                     }`}
                     style={{ left: `${xOf(displayFrame(m.key))}px` }}
-                    title={
-                      m.moves
-                        ? `${studio.selectedJoint()} moves into frame ${m.key.frame}`
-                        : `${studio.selectedJoint()} holds at frame ${m.key.frame}`
-                    }
+                    title={t(m.moves ? 'timeline.jointMoves' : 'timeline.jointHolds', {
+                      joint: studio.selectedJoint() ?? '',
+                      frame: bf(m.key.frame)
+                    })}
                     onMouseDown={(e) => {
                       e.stopPropagation()
                       studio.setPlaying(false)
@@ -858,7 +868,7 @@ export default function Timeline(): JSX.Element {
                 when={m().keyId}
                 fallback={
                   <MenuButton
-                    label={`Insert key at frame ${bf(m().frame)}`}
+                    label={t('timeline.insertKey', { frame: bf(m().frame) })}
                     onClick={() => {
                       const c = clip()
                       const rig = studio.rig()
@@ -871,16 +881,16 @@ export default function Timeline(): JSX.Element {
                 }
               >
                 <div class="px-2.5 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                  Easing
+                  {t('easing.heading')}
                 </div>
                 <For each={EASING_OPTIONS}>
-                  {(o) => (
+                  {(e) => (
                     <MenuButton
-                      label={o.label}
-                      hint={o.title}
-                      active={selectedEasing() === o.value}
+                      label={t(`easing.${e}.label`)}
+                      hint={t(`easing.${e}.title`)}
+                      active={selectedEasing() === e}
                       onClick={() => {
-                        studio.setEasing(studio.selectedKeyIds(), o.value)
+                        studio.setEasing(studio.selectedKeyIds(), e)
                         setMenu(null)
                       }}
                     />
@@ -888,8 +898,8 @@ export default function Timeline(): JSX.Element {
                 </For>
                 <div class="my-1 border-t border-zinc-800" />
                 <MenuButton
-                  label="Mirror to half-cycle (Shift+M)"
-                  hint="Key this pose mirrored half a cycle later — left step becomes right step"
+                  label={t('timeline.mirrorHalfCycle')}
+                  hint={t('timeline.mirrorHalfCycleHint')}
                   onClick={() => {
                     const k = clip()?.keys.find((x) => x.id === m().keyId)
                     if (k) {
@@ -900,7 +910,7 @@ export default function Timeline(): JSX.Element {
                   }}
                 />
                 <MenuButton
-                  label="Copy pose"
+                  label={t('timeline.copyPoseMenu')}
                   onClick={() => {
                     const k = clip()?.keys.find((x) => x.id === m().keyId)
                     if (k) {
@@ -910,7 +920,7 @@ export default function Timeline(): JSX.Element {
                   }}
                 />
                 <MenuButton
-                  label={`Duplicate to playhead (${bf(studio.frame())})`}
+                  label={t('timeline.duplicateToPlayhead', { frame: bf(studio.frame()) })}
                   onClick={() => {
                     const k = clip()?.keys.find((x) => x.id === m().keyId)
                     if (k) {
@@ -920,7 +930,7 @@ export default function Timeline(): JSX.Element {
                   }}
                 />
                 <MenuButton
-                  label="Delete"
+                  label={t('common.delete')}
                   danger
                   onClick={() => {
                     studio.deleteKeys(studio.selectedKeyIds())

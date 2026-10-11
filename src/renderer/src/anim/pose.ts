@@ -218,7 +218,7 @@ export function blendPoses(a: Pose, b: Pose, t: number, rest: Pose): Pose {
 
 /**
  * The pose at any (possibly fractional) frame. Before the first key the first
- * key holds and after the last the last key holds — Blender's constant
+ * key holds and after the last the last key holds. That is Blender's constant
  * extrapolation, and how a Pivot figure stays put once you stop keying it.
  */
 export function sampleClip(clip: Clip, frame: number, rest: Pose): Pose {

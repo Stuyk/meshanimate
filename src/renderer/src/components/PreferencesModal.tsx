@@ -3,6 +3,7 @@ import { DEFAULT_DISPLAY, studio } from '../anim/studio'
 import { formatGrid } from '../viewport/snap'
 import { BoneIcon, GhostIcon, MagnetIcon, SettingsIcon } from './icons'
 import { Button, Modal, SegmentedControl, Slider, ToggleSwitch } from './ui'
+import { t, tr } from '../i18n'
 
 const GRID_STEPS = [0.01, 0.025, 0.05, 0.1, 0.25]
 const ANGLE_STEPS = [5, 10, 15, 30, 45]
@@ -48,7 +49,7 @@ export default function PreferencesModal(props: {
     <Modal
       isOpen={props.isOpen}
       onClose={props.onClose}
-      title="Preferences"
+      title={t('prefs.title')}
       icon={SettingsIcon}
       size="md"
       footer={
@@ -57,7 +58,7 @@ export default function PreferencesModal(props: {
             when={confirmReset()}
             fallback={
               <Button variant="ghost" onClick={() => setConfirmReset(true)}>
-                Reset to defaults
+                {t('prefs.reset')}
               </Button>
             }
           >
@@ -69,60 +70,62 @@ export default function PreferencesModal(props: {
                 setConfirmReset(false)
               }}
             >
-              Really reset?
+              {t('prefs.reallyReset')}
             </Button>
           </Show>
           <Button variant="primary" onClick={props.onClose}>
-            Done
+            {t('common.done')}
           </Button>
         </>
       }
     >
-      <Heading>Blender</Heading>
+      <Heading>{t('prefs.blenderHeading')}</Heading>
       <div class="flex items-center justify-between gap-2 p-2 rounded-[var(--ui-radius)] bg-[var(--bg-input)] border border-[var(--border-color)]">
         <div class="flex flex-col min-w-0">
           <span class="font-semibold">
-            {props.blender?.path ? (props.blender.version ?? 'Blender') : 'Blender not found'}
+            {props.blender?.path
+              ? (props.blender.version ?? t('common.blender'))
+              : t('prefs.blenderNotFound')}
           </span>
           <span
             class="text-[10px] text-[var(--text-muted)] truncate"
             title={props.blender?.path ?? ''}
           >
-            {props.blender?.path ?? 'MeshAnimate needs Blender to read and write .blend files.'}
+            {props.blender?.path ?? t('prefs.blenderNeeded')}
           </span>
         </div>
         <div class="flex gap-1 shrink-0">
           <Button size="xs" variant="ghost" onClick={props.onAutoDetectBlender}>
-            Find automatically
+            {t('prefs.findAutomatically')}
           </Button>
           <Button size="xs" onClick={props.onLocateBlender}>
-            Choose…
+            {t('common.choose')}
           </Button>
         </div>
       </div>
 
-      <Heading>Posing</Heading>
+      <Heading>{t('prefs.posingHeading')}</Heading>
       <ToggleSwitch
-        label="Auto-key when the app starts"
-        description="Every pose edit writes a key at the playhead"
+        label={t('prefs.autoKey')}
+        description={t('prefs.autoKeyHelp')}
         checked={d().autoKeyDefault}
         onChange={(v) => studio.setDisplay({ ...d(), autoKeyDefault: v })}
       />
       <ToggleSwitch
-        label="Snapping on"
+        label={t('prefs.snapping')}
         icon={MagnetIcon}
         checked={snap().enabled}
         onChange={(enabled) => studio.setSnap({ enabled })}
       />
       <div class="grid grid-cols-[90px_1fr] items-center gap-2">
-        <span class="text-[11px] text-[var(--text-muted)]">Grid</span>
+        <span class="text-[11px] text-[var(--text-muted)]">{t('prefs.grid')}</span>
         <SegmentedControl
           size="xs"
           value={snap().grid}
           onChange={(grid) => studio.setSnap({ grid })}
           options={GRID_STEPS.map((g) => ({ value: g, label: formatGrid(g).replace(' ', '') }))}
         />
-        <span class="text-[11px] text-[var(--text-muted)]">Angle step</span>
+        <span class="text-[11px] text-[var(--text-muted)]">{t('prefs.angleStep')}</span>
         <SegmentedControl
           size="xs"
           value={snap().angle}
@@ -131,9 +134,9 @@ export default function PreferencesModal(props: {
         />
       </div>
 
-      <Heading>Viewport</Heading>
+      <Heading>{t('prefs.viewportHeading')}</Heading>
       <Slider
-        label="Handle size"
+        label={t('display.handleSize')}
         value={d().jointSize}
         min={0.5}
         max={2.5}
@@ -142,25 +145,25 @@ export default function PreferencesModal(props: {
         onChange={(v) => studio.setDisplay({ ...d(), jointSize: v })}
       />
       <ToggleSwitch
-        label="Show bones hidden in Blender"
+        label={t('display.showHidden')}
         icon={BoneIcon}
         checked={d().showHidden}
         onChange={(v) => studio.setDisplay({ ...d(), showHidden: v })}
       />
       <div class="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] pt-1">
-        <GhostIcon size={12} /> Onion skin colours
+        <GhostIcon size={12} /> {t('prefs.onionColours')}
       </div>
       <div class="grid grid-cols-2 gap-3">
         <For
           each={[
-            { label: 'Before the playhead', key: 'onionBefore' as const },
-            { label: 'After the playhead', key: 'onionAfter' as const },
-            { label: 'First-frame ghost', key: 'firstFrameColor' as const }
+            { label: 'prefs.beforePlayhead' as const, key: 'onionBefore' as const },
+            { label: 'prefs.afterPlayhead' as const, key: 'onionAfter' as const },
+            { label: 'prefs.firstFrameGhost' as const, key: 'firstFrameColor' as const }
           ]}
         >
           {(c) => (
             <ColorField
-              label={c.label}
+              label={t(c.label)}
               value={d()[c.key]}
               onChange={(v) => studio.setDisplay({ ...d(), [c.key]: v })}
             />
@@ -168,11 +171,9 @@ export default function PreferencesModal(props: {
         </For>
       </div>
 
-      <Heading>Saving</Heading>
+      <Heading>{t('prefs.savingHeading')}</Heading>
       <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
-        Before each save the .blend is copied to a <code>.meshanimate-backups</code> folder next to
-        it; the newest 20 copies per file are kept. Only actions you changed are rewritten, and
-        bones you didn't touch keep Blender's original curves.
+        {tr('prefs.savingInfo', { folder: <code>.meshanimate-backups</code> })}
       </p>
     </Modal>
   )

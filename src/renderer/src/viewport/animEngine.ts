@@ -8,6 +8,7 @@ import { aimChain } from '../anim/manipulate'
 import type { IkConstraint } from '../anim/ik'
 import type { Pose } from '../anim/types'
 import type { PoseTool } from '../anim/studio'
+import { t } from '../i18n'
 import {
   formatGrid,
   latticePoint,
@@ -59,8 +60,8 @@ export interface OverlayStyle {
  * What a grab in the viewport does:
  * - rotate: swing an FK bone about its head (Pivot-style), maybe its parents too
  * - move: put a bone's head somewhere (rig roots, IK targets, pole targets)
- * - ikEnd: the end of an IK chain — drags the IK target, as in Blender
- * - ikMid: a knee/elbow inside an IK chain — swings the pole target
+ * - ikEnd: the end of an IK chain. Drags the IK target, as in Blender
+ * - ikMid: a knee/elbow inside an IK chain. Swings the pole target
  */
 type Handle =
   | { kind: 'rotate'; joint: THREE.Object3D; fraction: number }
@@ -681,7 +682,13 @@ export class AnimEngine {
       ctx.beginPath()
       ctx.arc(b.x, b.y, 9, 0, Math.PI * 2)
       ctx.stroke()
-      this.label(b, `${frame.name} · ${formatGrid(settings.grid)}`)
+      this.label(
+        b,
+        t('snap.overlayLabel', {
+          plane: t(`snap.planes.${frame.name}`),
+          grid: formatGrid(settings.grid)
+        })
+      )
     }
   }
 

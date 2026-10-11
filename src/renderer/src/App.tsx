@@ -34,6 +34,7 @@ import {
 } from './anim/actions'
 import type { Clip } from './anim/types'
 import { fileName } from './utils/paths'
+import { t, tr } from './i18n'
 
 const LIGHTING_KEY = 'meshanimate:lighting'
 
@@ -100,7 +101,7 @@ export default function App(): JSX.Element {
   }
 
   const blendPath = (): string | null => studio.rig()?.blendPath ?? null
-  const docName = (): string => (blendPath() ? fileName(blendPath()) : 'No file open')
+  const docName = (): string => (blendPath() ? fileName(blendPath()) : t('common.noFileOpen'))
 
   async function refreshRecent(): Promise<void> {
     const list = await window.api.getRecentProjects()
@@ -117,11 +118,11 @@ export default function App(): JSX.Element {
       return
     }
     if (!res.success) {
-      notify(res.error ?? 'That is not a Blender executable', 'error', 6000)
+      notify(res.error ?? t('toast.notBlender'), 'error', 6000)
       return
     }
     setBlender({ path: res.path ?? null, version: res.version })
-    notify(`Using ${res.version ?? 'Blender'}`, 'success')
+    notify(t('toast.usingBlender', { version: res.version ?? t('common.blender') }), 'success')
   }
 
   // --- opening ------------------------------------------------------------------
@@ -158,7 +159,7 @@ export default function App(): JSX.Element {
     flushPendingCommit()
     if (!studio.dirty()) {
       await reloadInPlace()
-      notify(`${docName()} changed on disk — reloaded`, 'info')
+      notify(t('toast.reloaded', { file: docName() }), 'info')
       return
     }
     setDiskChanged(true)
@@ -190,7 +191,7 @@ export default function App(): JSX.Element {
     flushPendingCommit()
     const clipName = studio.activeClip()?.name
     const frame = studio.frame()
-    setBusy(`Merging with ${fileName(path)}…`)
+    setBusy(t('busy.merging', { file: fileName(path) }))
     try {
       const disk = await openBlendDocument(path)
       const res = mergeWithDisk(studio.clips(), studio.sources(), disk)
@@ -201,22 +202,24 @@ export default function App(): JSX.Element {
       studio.setDirty(true)
       await rememberDiskState(path)
       notify(
-        `Merged: kept ${res.keptMine} clip${res.keptMine === 1 ? '' : 's'} from MeshAnimate, the rest from disk` +
-          (res.conflicts.length
-            ? ` · changed in both, MeshAnimate's kept: ${res.conflicts.join(', ')}`
-            : ''),
+        [
+          t('toast.merged', { count: res.keptMine }),
+          res.conflicts.length ? t('toast.mergeConflicts', { clips: res.conflicts.join(', ') }) : ''
+        ]
+          .filter(Boolean)
+          .join(' '),
         res.conflicts.length ? 'warning' : 'success',
         8000
       )
     } catch (err) {
-      notify(`Couldn't merge: ${(err as Error).message}`, 'error', 8000)
+      notify(t('toast.mergeFailed', { error: (err as Error).message }), 'error', 8000)
     } finally {
       setBusy(null)
     }
   }
 
   async function openBlend(path: string, restore?: Autosave, quiet = false): Promise<void> {
-    setBusy(`Reading ${fileName(path)} with Blender…`)
+    setBusy(t('busy.reading', { file: fileName(path) }))
     try {
       const doc = await openBlendDocument(path)
       await rememberDiskState(path)
@@ -236,14 +239,21 @@ export default function App(): JSX.Element {
       }
       const ik = doc.rig.ik.length
       notify(
-        `${fileName(path)}: ${doc.rig.jointByName.size} bones` +
-          (ik ? `, ${ik} IK chain${ik > 1 ? 's' : ''}` : '') +
-          `, ${doc.clips.length} action${doc.clips.length === 1 ? '' : 's'}`,
+        t(ik ? 'toast.openedWithIk' : 'toast.opened', {
+          file: fileName(path),
+          bones: t('toast.bones', { count: doc.rig.jointByName.size }),
+          ik: t('toast.ikChains', { count: ik }),
+          actions: t('toast.actions', { count: doc.clips.length })
+        }),
         'success'
       )
     } catch (err) {
       console.error(err)
-      notify(`Couldn't open ${fileName(path)}: ${(err as Error).message}`, 'error', 9000)
+      notify(
+        t('toast.openFailed', { file: fileName(path), error: (err as Error).message }),
+        'error',
+        9000
+      )
     } finally {
       setBusy(null)
     }
@@ -252,7 +262,7 @@ export default function App(): JSX.Element {
   async function promptOpen(): Promise<void> {
     const paths = await window.api.openFileDialog({
       key: 'blend',
-      filters: [{ name: 'Blender File', extensions: ['blend'] }]
+      filters: [{ name: t('files.blend'), extensions: ['blend'] }]
     })
     const path = paths?.[0]
     if (path) {
@@ -284,7 +294,7 @@ export default function App(): JSX.Element {
       const chosen = await window.api.saveFileDialog({
         key: 'blend',
         defaultPath: fileName(rig.blendPath),
-        filters: [{ name: 'Blender File', extensions: ['blend'] }]
+        filters: [{ name: t('files.blend'), extensions: ['blend'] }]
       })
       if (!chosen) {
         return false
@@ -299,18 +309,18 @@ export default function App(): JSX.Element {
     const { payload, changes } = buildSavePayload(rig, studio.clips(), studio.sources())
     if (changes === 0 && outPath === rig.blendPath) {
       studio.setDirty(false)
-      notify('Nothing changed since the file was read', 'info')
+      notify(t('toast.nothingToSave'), 'info')
       return true
     }
-    setBusy(`Saving ${fileName(outPath)} with Blender…`)
+    setBusy(t('busy.saving', { file: fileName(outPath) }))
     try {
       const res = await window.api.saveBlend(rig.blendPath, outPath, JSON.stringify(payload))
       if (!res.ok) {
-        notify(`Save failed — the file was not changed. ${res.error ?? ''}`, 'error', 10000)
+        notify(t('toast.saveFailed', { error: res.error ?? '' }), 'error', 10000)
         return false
       }
       await rememberDiskState(outPath)
-      setBusy(`Checking ${fileName(outPath)}…`)
+      setBusy(t('busy.checking', { file: fileName(outPath) }))
       const fresh = await sourcesFromDisk(outPath, studio.clips())
       if (fresh) {
         studio.setSources(fresh)
@@ -325,9 +335,14 @@ export default function App(): JSX.Element {
       const wrote = payload.clips.length
       const tracks = res.nlaAdded?.length ?? 0
       notify(
-        `Saved ${fileName(outPath)} — ${wrote} action${wrote === 1 ? '' : 's'} written` +
-          (tracks ? ` · ${tracks} added to the NLA editor` : '') +
-          (res.backupPath ? ' · previous version backed up' : ''),
+        [
+          t('toast.saved', { file: fileName(outPath) }),
+          t('toast.actionsWritten', { count: wrote }),
+          tracks ? t('toast.nlaAdded', { count: tracks }) : '',
+          res.backupPath ? t('toast.backupMade') : ''
+        ]
+          .filter(Boolean)
+          .join(' '),
         'success',
         5000
       )
@@ -346,21 +361,24 @@ export default function App(): JSX.Element {
     const path = await window.api.saveFileDialog({
       key: 'export',
       defaultPath: `${clip.name}.webm`,
-      filters: [{ name: 'WebM Video', extensions: ['webm'] }]
+      filters: [{ name: t('files.webm'), extensions: ['webm'] }]
     })
     if (!path) {
       return
     }
     studio.setPlaying(false)
-    setBusy(`Recording ${clip.name}…`)
+    setBusy(t('busy.recording', { clip: clip.name }))
     try {
       const blob = await viewport.engine.recordWebm(clip.length, clip.fps, (f) =>
         studio.poseAt(clip, f)
       )
       const ok = await window.api.saveBinaryFile(path, new Uint8Array(await blob.arrayBuffer()))
-      notify(ok ? `Saved ${fileName(path)}` : 'Video export failed', ok ? 'success' : 'error')
+      notify(
+        ok ? t('toast.videoSaved', { file: fileName(path) }) : t('toast.videoFailed'),
+        ok ? 'success' : 'error'
+      )
     } catch (err) {
-      notify(`Video export failed: ${(err as Error).message}`, 'error', 6000)
+      notify(t('toast.videoFailedWithError', { error: (err as Error).message }), 'error', 6000)
     } finally {
       viewport.engine.applyPose(studio.poseAt(clip, studio.frame()))
       setBusy(null)
@@ -399,34 +417,34 @@ export default function App(): JSX.Element {
 
   const fileMenu = (): MenuItem[] => [
     {
-      label: 'Open .blend…',
+      label: t('menu.open'),
       icon: FolderOpenIcon,
       shortcut: 'Ctrl+O',
       onClick: () => void promptOpen()
     },
     {
-      label: 'Reload from Disk',
+      label: t('menu.reload'),
       icon: RefreshCwIcon,
       disabled: !blendPath(),
       onClick: () => void reload()
     },
     { type: 'divider' },
     {
-      label: blendPath() ? `Save to ${fileName(blendPath())}` : 'Save',
+      label: blendPath() ? t('menu.saveTo', { file: fileName(blendPath()) }) : t('menu.save'),
       icon: SaveIcon,
       shortcut: 'Ctrl+S',
       disabled: !blendPath(),
       onClick: () => void save()
     },
     {
-      label: 'Save As…',
+      label: t('menu.saveAs'),
       icon: SaveIcon,
       shortcut: 'Ctrl+Shift+S',
       disabled: !blendPath(),
       onClick: () => void save(true)
     },
     {
-      label: 'Show File in Folder',
+      label: t('menu.showInFolder'),
       icon: ClockIcon,
       disabled: !blendPath(),
       onClick: () => {
@@ -438,7 +456,7 @@ export default function App(): JSX.Element {
     },
     { type: 'divider' },
     {
-      label: 'Export Video (WebM)…',
+      label: t('menu.exportVideo'),
       icon: FilmIcon,
       disabled: !blendPath(),
       onClick: () => void exportVideo()
@@ -448,16 +466,16 @@ export default function App(): JSX.Element {
   const viewMenu = (): MenuItem[] => {
     const go = (v: View) => (): void => viewport?.engine.viewAlong(v)
     return [
-      { label: 'Front', shortcut: 'Num 1', onClick: go('front') },
-      { label: 'Back', shortcut: 'Ctrl+Num 1', onClick: go('back') },
-      { label: 'Right Side', shortcut: 'Num 3', onClick: go('right') },
-      { label: 'Left Side', shortcut: 'Ctrl+Num 3', onClick: go('left') },
-      { label: 'Top', shortcut: 'Num 7', onClick: go('top') },
-      { label: 'Bottom', shortcut: 'Ctrl+Num 7', onClick: go('bottom') },
+      { label: t('menu.front'), shortcut: 'Num 1', onClick: go('front') },
+      { label: t('menu.back'), shortcut: 'Ctrl+Num 1', onClick: go('back') },
+      { label: t('menu.rightSide'), shortcut: 'Num 3', onClick: go('right') },
+      { label: t('menu.leftSide'), shortcut: 'Ctrl+Num 3', onClick: go('left') },
+      { label: t('menu.top'), shortcut: 'Num 7', onClick: go('top') },
+      { label: t('menu.bottom'), shortcut: 'Ctrl+Num 7', onClick: go('bottom') },
       { type: 'divider' },
-      { label: 'Frame Model', shortcut: 'F', onClick: () => viewport?.engine.frame() },
+      { label: t('menu.frameModel'), shortcut: 'F', onClick: () => viewport?.engine.frame() },
       {
-        label: studio.snap().enabled ? 'Turn Snapping Off' : 'Turn Snapping On',
+        label: studio.snap().enabled ? t('menu.snappingOff') : t('menu.snappingOn'),
         shortcut: 'S',
         onClick: () => studio.setSnap({ enabled: !studio.snap().enabled })
       }
@@ -466,40 +484,40 @@ export default function App(): JSX.Element {
 
   const editMenu = (): MenuItem[] => [
     {
-      label: 'Undo',
+      label: t('menu.undo'),
       shortcut: 'Ctrl+Z',
       disabled: !studio.canUndo(),
       onClick: () => studio.undo()
     },
     {
-      label: 'Redo',
+      label: t('menu.redo'),
       shortcut: 'Ctrl+Shift+Z',
       disabled: !studio.canRedo(),
       onClick: () => studio.redo()
     },
     { type: 'divider' },
-    { label: 'Key Pose', shortcut: 'K', onClick: keyCurrentPose },
-    { label: 'Copy Pose', shortcut: 'Ctrl+C', onClick: copyLivePose },
+    { label: t('menu.keyPose'), shortcut: 'K', onClick: keyCurrentPose },
+    { label: t('menu.copyPose'), shortcut: 'Ctrl+C', onClick: copyLivePose },
     {
-      label: 'Paste Pose',
+      label: t('menu.pastePose'),
       shortcut: 'Ctrl+V',
       disabled: !studio.clipboardPose(),
       onClick: pasteClipboardPose
     },
-    { label: 'Mirror Pose', shortcut: 'M', onClick: mirrorLivePose },
-    { label: 'Mirror to Half-Cycle', shortcut: 'Shift+M', onClick: halfCycle },
+    { label: t('menu.mirrorPose'), shortcut: 'M', onClick: mirrorLivePose },
+    { label: t('menu.mirrorHalfCycle'), shortcut: 'Shift+M', onClick: halfCycle },
     { type: 'divider' },
-    { label: 'Set Preview Start', shortcut: '[', onClick: () => studio.setRangeEnd('in') },
-    { label: 'Set Preview End', shortcut: ']', onClick: () => studio.setRangeEnd('out') },
+    { label: t('menu.previewStart'), shortcut: '[', onClick: () => studio.setRangeEnd('in') },
+    { label: t('menu.previewEnd'), shortcut: ']', onClick: () => studio.setRangeEnd('out') },
     {
-      label: 'Clear Preview Range',
+      label: t('menu.clearPreview'),
       shortcut: '\\',
       disabled: !studio.previewRange(),
       onClick: () => studio.setPreviewRange(null)
     },
     { type: 'divider' },
     {
-      label: 'Delete Selected Keys',
+      label: t('menu.deleteKeys'),
       shortcut: 'Del',
       danger: true,
       disabled: studio.selectedKeyIds().length === 0,
@@ -510,18 +528,18 @@ export default function App(): JSX.Element {
   // --- keyboard -----------------------------------------------------------------
 
   const onKeyDown = (e: KeyboardEvent): void => {
-    const t = e.target as HTMLElement
+    const target = e.target as HTMLElement
     const typing =
-      t.tagName === 'INPUT' ||
-      t.tagName === 'TEXTAREA' ||
-      t.tagName === 'SELECT' ||
-      t.isContentEditable
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.isContentEditable
     if (typing || busy()) {
       return
     }
     // A focused button would also "click" on Space/Enter; the shortcut wins.
-    if (t.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) {
-      t.blur()
+    if (target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) {
+      target.blur()
     }
     const ctrl = e.ctrlKey || e.metaKey
     const view = NUMPAD_VIEWS[e.code]
@@ -604,7 +622,7 @@ export default function App(): JSX.Element {
     const f = mirrorToHalfCycle()
     const clip = studio.activeClip()
     if (f !== null && clip) {
-      notify(`Mirrored pose keyed at frame ${f + clip.start}`, 'success')
+      notify(t('toast.mirrored', { frame: f + clip.start }), 'success')
     }
   }
 
@@ -677,11 +695,11 @@ export default function App(): JSX.Element {
         docName={docName()}
         busy={!!busy()}
         menus={[
-          { label: 'File', title: 'Open and save .blend files', items: fileMenu() },
-          { label: 'Edit', title: 'Undo, keys and poses', items: editMenu() },
+          { label: t('menu.file.label'), title: t('menu.file.title'), items: fileMenu() },
+          { label: t('menu.edit.label'), title: t('menu.edit.title'), items: editMenu() },
           {
-            label: 'View',
-            title: 'Front, side and top views; snapping',
+            label: t('menu.view.label'),
+            title: t('menu.view.title'),
             items: viewMenu()
           }
         ]}
@@ -711,16 +729,17 @@ export default function App(): JSX.Element {
           <Show when={studio.rig()?.previewApproximate && !approxDismissed()}>
             <div class="absolute top-3 left-3 max-w-[460px] flex items-start gap-2 px-3 py-2 rounded-[var(--ui-radius)] bg-zinc-900/92 border border-amber-500/40 text-[11px] text-amber-100 shadow-lg">
               <span>
-                <b>Preview is approximate for this rig.</b> Its mesh is driven by Blender
-                constraints MeshAnimate doesn't evaluate (
-                {studio.rig()!.warnings.slice(0, 3).join(', ')}
-                {studio.rig()!.warnings.length > 3 ? '…' : ''}) — common with Rigify. Keys still
-                save exactly; check the motion in Blender.
+                <b>{t('banner.approxTitle')}</b>{' '}
+                {t('banner.approxBody', {
+                  constraints:
+                    studio.rig()!.warnings.slice(0, 3).join(', ') +
+                    (studio.rig()!.warnings.length > 3 ? '…' : '')
+                })}
               </span>
               <button
                 type="button"
                 class="shrink-0 px-1 text-amber-200/70 hover:text-white cursor-pointer"
-                title="Dismiss"
+                title={t('common.dismiss')}
                 onClick={() => setApproxDismissed(true)}
               >
                 ✕
@@ -729,17 +748,17 @@ export default function App(): JSX.Element {
           </Show>
           <Show when={studio.rig() && studio.unkeyed() && !studio.autoKey()}>
             <div class="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-[var(--ui-radius)] bg-zinc-900/90 border border-amber-500/40 text-[11px] text-amber-200 shadow-lg">
-              Pose changed but not keyed — press <Kbd size="xs">K</Kbd> to key it
+              {tr('banner.notKeyed', { key: <Kbd size="xs">K</Kbd> })}
             </div>
           </Show>
           <Show when={studio.rig()}>
             <div class="absolute bottom-2 left-3 text-[10px] text-[var(--text-muted)]/80 pointer-events-none select-none flex gap-3">
-              <span>Drag handle: pose</span>
-              <span>◎ IK target · ◆ pole</span>
-              <span>Click body: select</span>
-              <span>RMB: orbit</span>
-              <span>Shift+RMB: pan</span>
-              <span>Wheel: zoom</span>
+              <span>{t('hints.drag')}</span>
+              <span>{t('hints.ik')}</span>
+              <span>{t('hints.click')}</span>
+              <span>{t('hints.orbit')}</span>
+              <span>{t('hints.pan')}</span>
+              <span>{t('hints.zoom')}</span>
             </div>
           </Show>
         </main>
@@ -762,7 +781,9 @@ export default function App(): JSX.Element {
           await window.api.setBlenderPath(null)
           await refreshBlender()
           notify(
-            blender()?.path ? `Found ${blender()?.version ?? 'Blender'}` : 'No Blender found',
+            blender()?.path
+              ? t('toast.foundBlender', { version: blender()?.version ?? t('common.blender') })
+              : t('toast.noBlender'),
             blender()?.path ? 'success' : 'warning'
           )
         }}
@@ -780,13 +801,13 @@ export default function App(): JSX.Element {
       <Modal
         isOpen={!!confirmDiscard()}
         onClose={() => setConfirmDiscard(null)}
-        title="Unsaved changes"
+        title={t('dialogs.unsaved.title')}
         icon={FigureIcon}
         size="sm"
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirmDiscard(null)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="danger"
@@ -798,7 +819,7 @@ export default function App(): JSX.Element {
                 next?.()
               }}
             >
-              Discard
+              {t('common.discard')}
             </Button>
             <Button
               variant="primary"
@@ -810,21 +831,18 @@ export default function App(): JSX.Element {
                 }
               }}
             >
-              Save to .blend
+              {t('dialogs.unsaved.save')}
             </Button>
           </>
         }
       >
-        <p>
-          Your animation has changes that aren't in {docName()} yet. Save them into the .blend
-          first? The current file is backed up before it's overwritten.
-        </p>
+        <p>{t('dialogs.unsaved.body', { file: docName() })}</p>
       </Modal>
 
       <Modal
         isOpen={diskChanged()}
         onClose={() => setDiskChanged(false)}
-        title={`${docName()} changed on disk`}
+        title={t('dialogs.diskChanged.title', { file: docName() })}
         icon={RefreshCwIcon}
         size="md"
         footer={
@@ -840,7 +858,7 @@ export default function App(): JSX.Element {
                 }
               }}
             >
-              Keep mine
+              {t('dialogs.diskChanged.keepMine')}
             </Button>
             <Button
               variant="danger"
@@ -850,36 +868,29 @@ export default function App(): JSX.Element {
                 void reloadInPlace()
               }}
             >
-              Reload, discard mine
+              {t('dialogs.diskChanged.reload')}
             </Button>
             <Button variant="primary" onClick={() => void mergeFromDisk()}>
-              Merge
+              {t('dialogs.diskChanged.merge')}
             </Button>
           </>
         }
       >
-        <p>
-          The .blend was saved by another program (probably Blender) while you have unsaved work
-          here.
-        </p>
+        <p>{t('dialogs.diskChanged.intro')}</p>
         <ul class="list-disc pl-5 space-y-1 text-[var(--text-muted)]">
-          <li>
-            <b class="text-[var(--text-main)]">Merge</b> — reload the file and put your edited clips
-            back on top. Everything you didn't touch here comes from the new file.
-          </li>
-          <li>
-            <b class="text-[var(--text-main)]">Reload</b> — take the file as it is now and drop your
-            unsaved changes.
-          </li>
-          <li>
-            <b class="text-[var(--text-main)]">Keep mine</b> — carry on; saving rewrites only the
-            actions you changed here.
-          </li>
+          <For each={['merge', 'reload', 'keep'] as const}>
+            {(choice) => (
+              <li>
+                {tr(`dialogs.diskChanged.${choice}Help`, {
+                  label: (
+                    <b class="text-[var(--text-main)]">{t(`dialogs.diskChanged.${choice}Label`)}</b>
+                  )
+                })}
+              </li>
+            )}
+          </For>
         </ul>
-        <p class="text-[var(--text-muted)]">
-          Tip: if Blender still has the file open after you save here, use File ▸ Revert there, or
-          Blender's next save will undo MeshAnimate's changes.
-        </p>
+        <p class="text-[var(--text-muted)]">{t('dialogs.diskChanged.revertTip')}</p>
       </Modal>
 
       <Modal
@@ -888,7 +899,7 @@ export default function App(): JSX.Element {
           setRecovery(null)
           void window.api.clearRecovery()
         }}
-        title="Restore unsaved work?"
+        title={t('dialogs.recovery.title')}
         icon={FigureIcon}
         size="sm"
         footer={
@@ -900,7 +911,7 @@ export default function App(): JSX.Element {
                 void window.api.clearRecovery()
               }}
             >
-              Discard
+              {t('common.discard')}
             </Button>
             <Button
               variant="primary"
@@ -912,14 +923,15 @@ export default function App(): JSX.Element {
                 }
               }}
             >
-              Restore
+              {t('dialogs.recovery.restore')}
             </Button>
           </>
         }
       >
         <p>
-          MeshAnimate closed with unsaved animation work on{' '}
-          <span class="font-semibold">{fileName(recovery()?.blendPath ?? '')}</span>. Restore it?
+          {tr('dialogs.recovery.body', {
+            file: <span class="font-semibold">{fileName(recovery()?.blendPath ?? '')}</span>
+          })}
         </p>
       </Modal>
 
@@ -943,10 +955,8 @@ function StartScreen(props: {
         <div class="flex items-center gap-3">
           <AppIcon size={40} />
           <div>
-            <div class="text-base font-bold">MeshAnimate</div>
-            <div class="text-[11px] text-[var(--text-muted)]">
-              Pose-to-pose animation for rigged .blend files
-            </div>
+            <div class="text-base font-bold">{t('common.appName')}</div>
+            <div class="text-[11px] text-[var(--text-muted)]">{t('start.tagline')}</div>
           </div>
         </div>
 
@@ -957,13 +967,13 @@ function StartScreen(props: {
           onClick={props.onOpen}
           icon={<FolderOpenIcon size={15} />}
         >
-          Open .blend…
+          {t('start.open')}
         </Button>
 
         <Show when={props.recent.length > 0}>
           <div class="flex flex-col gap-0.5">
             <div class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] pb-1">
-              Recent
+              {t('start.recent')}
             </div>
             <For each={props.recent.slice(0, 6)}>
               {(p) => (
@@ -993,13 +1003,15 @@ function StartScreen(props: {
         >
           <span class="truncate" title={props.blender?.path ?? ''}>
             {props.blender === null
-              ? 'Looking for Blender…'
+              ? t('start.lookingForBlender')
               : found()
-                ? `${props.blender?.version ?? 'Blender'} found`
-                : 'Blender not found — MeshAnimate needs it to read and write .blend files'}
+                ? t('start.blenderFound', {
+                    version: props.blender?.version ?? t('common.blender')
+                  })
+                : t('start.blenderMissing')}
           </span>
           <Button size="xs" variant="outline" onClick={props.onLocateBlender}>
-            {found() ? 'Change…' : 'Locate Blender…'}
+            {found() ? t('start.change') : t('start.locate')}
           </Button>
         </div>
       </div>

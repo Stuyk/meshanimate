@@ -15,6 +15,7 @@ import { saveAutosave, loadAutosave, clearAutosave } from './recovery'
 import { existsSync } from 'fs'
 import { getEffectiveBlender, testBlenderExecutable } from './blenderBridge'
 import { openBlend, saveBlend } from './blendFile'
+import { t } from './i18n'
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -29,7 +30,7 @@ protocol.registerSchemesAsPrivileged([
   }
 ])
 
-// GPU rasterization tuning. Deliberately NOT disabling the frame-rate limit —
+// GPU rasterization tuning. Deliberately NOT disabling the frame-rate limit:
 // that uncaps rendering from vsync entirely, so a static scene (the render
 // loop always redraws, no dirty-check) gets pushed at however many hundred/
 // thousand FPS the GPU can physically produce, pinning it at 100% even at
@@ -46,7 +47,7 @@ let forceClose = false
  * the close guard has to stand aside or the window can never be closed. */
 let rendererGone = false
 let rendererHung = false
-/** One recovery dialog at a time — a hang that turns into a crash would otherwise stack two. */
+/** One recovery dialog at a time. A hang that turns into a crash would otherwise stack two. */
 let recoveryDialogOpen = false
 
 /**
@@ -64,13 +65,15 @@ async function showRecoveryDialog(
     return
   }
   recoveryDialogOpen = true
-  const buttons = allowWait ? ['Wait', 'Reload', 'Quit'] : ['Reload', 'Quit']
+  const choices: ('wait' | 'reload' | 'quit')[] = allowWait
+    ? ['wait', 'reload', 'quit']
+    : ['reload', 'quit']
   const { response } = await dialog.showMessageBox(win, {
     type: 'error',
-    title: 'MeshAnimate',
+    title: t('common.appName'),
     message,
     detail,
-    buttons,
+    buttons: choices.map((c) => t(`main.${c}`)),
     defaultId: 0,
     cancelId: 0,
     noLink: true
@@ -79,23 +82,22 @@ async function showRecoveryDialog(
   if (win.isDestroyed()) {
     return
   }
-  const choice = buttons[response]
-  if (choice === 'Reload') {
+  const choice = choices[response]
+  if (choice === 'reload') {
     rendererGone = false
     rendererHung = false
     win.webContents.reload()
-  } else if (choice === 'Quit') {
+  } else if (choice === 'quit') {
     forceClose = true
     win.close()
   }
 }
 
-const RECOVERY_DETAIL =
-  'Changes since the last autosave (every 60 seconds) may be lost. Reload to get back to the start screen, where the autosave can be restored.'
+const recoveryDetail = (): string => t('main.recoveryDetail')
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    title: 'MeshAnimate',
+    title: t('common.appName'),
     width: 1920,
     height: 1080,
     minWidth: 1280,
@@ -114,7 +116,7 @@ function createWindow(): void {
   })
 
   // Never let a stray click on the close button, Alt+F4, or Cmd+Q throw away
-  // unsaved work — the renderer decides (via its own dirty state) whether to
+  // unsaved work. The renderer decides (via its own dirty state) whether to
   // prompt, and tells us back through 'app:close-confirmed' when it's safe.
   mainWindow.on('close', (event) => {
     if (forceClose || rendererGone) {
@@ -125,10 +127,10 @@ function createWindow(): void {
       // leaving the close button dead.
       const choice = dialog.showMessageBoxSync(mainWindow!, {
         type: 'warning',
-        title: 'MeshAnimate',
-        message: 'MeshAnimate is not responding.',
-        detail: RECOVERY_DETAIL,
-        buttons: ['Wait', 'Close Anyway'],
+        title: t('common.appName'),
+        message: t('main.notResponding'),
+        detail: recoveryDetail(),
+        buttons: [t('main.wait'), t('main.closeAnyway')],
         defaultId: 0,
         cancelId: 0,
         noLink: true
@@ -149,16 +151,19 @@ function createWindow(): void {
     }
     rendererGone = true
     rendererHung = false
-    const reason = details.reason === 'oom' ? 'ran out of memory' : `stopped (${details.reason})`
-    void showRecoveryDialog(mainWindow!, `MeshAnimate ${reason}.`, RECOVERY_DETAIL, false)
+    const message =
+      details.reason === 'oom'
+        ? t('main.outOfMemory')
+        : t('main.stopped', { reason: details.reason })
+    void showRecoveryDialog(mainWindow!, message, recoveryDetail(), false)
   })
 
   mainWindow.on('unresponsive', () => {
     rendererHung = true
     void showRecoveryDialog(
       mainWindow!,
-      'MeshAnimate is not responding.',
-      `It may still be working on something heavy. ${RECOVERY_DETAIL}`,
+      t('main.notResponding'),
+      t('main.maybeBusy', { detail: recoveryDetail() }),
       true
     )
   })
@@ -168,7 +173,7 @@ function createWindow(): void {
   })
 
   // Handled here rather than in the page so the shortcut still works while
-  // the renderer is busy — which is exactly when you want the console.
+  // the renderer is busy, which is exactly when you want the console.
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown') {
       return
@@ -187,7 +192,7 @@ function createWindow(): void {
 
   // The Text tool asks Chromium for the installed fonts (queryLocalFonts),
   // which is gated behind the "local-fonts" permission. Electron's typings
-  // don't list that string yet, hence the widening — and everything else is
+  // don't list that string yet, hence the widening. Everything else is
   // refused rather than silently granted, since nothing here needs it.
   const isAllowedPermission = (permission: string): boolean => permission === 'local-fonts'
   mainWindow.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
@@ -201,7 +206,7 @@ function createWindow(): void {
     /**
      * A blank popup is one of our own inspector windows: the renderer calls
      * window.open('') and then writes the document itself (see
-     * utils/uvInspector.ts), which needs same-origin access from the opener —
+     * utils/uvInspector.ts), which needs same-origin access from the opener,
      * so it has to be a real child window rather than an external URL.
      *
      * Everything with an actual URL is a link and still goes to the browser;
@@ -254,7 +259,7 @@ app.whenReady().then(() => {
       options: {
         filters?: { name: string; extensions: string[] }[]
         multi?: boolean
-        /** Dialog purpose, e.g. 'model' or 'project' — remembers the folder per key. */
+        /** Dialog purpose, e.g. 'model' or 'project'. Remembers the folder per key. */
         key?: string
       }
     ) => {
@@ -284,7 +289,7 @@ app.whenReady().then(() => {
       options: {
         defaultPath?: string
         filters?: { name: string; extensions: string[] }[]
-        /** Dialog purpose, e.g. 'project' or 'export' — remembers the folder per key. */
+        /** Dialog purpose, e.g. 'project' or 'export'. Remembers the folder per key. */
         key?: string
       }
     ) => {
@@ -368,7 +373,7 @@ app.whenReady().then(() => {
       setBlenderPath(customPath)
       return { success: true, version: test.version }
     }
-    return { success: false, error: test.error || 'Invalid Blender executable' }
+    return { success: false, error: test.error || t('errors.invalidBlender') }
   })
 
   ipcMain.handle('blender:browse-executable', async () => {
@@ -377,11 +382,11 @@ app.whenReady().then(() => {
     }
     const isWin = process.platform === 'win32'
     const result = await dialog.showOpenDialog(mainWindow, {
-      title: 'Select Blender Executable',
+      title: t('main.selectBlender'),
       properties: ['openFile'],
       filters: isWin
-        ? [{ name: 'Blender Executable', extensions: ['exe'] }]
-        : [{ name: 'All Files', extensions: ['*'] }]
+        ? [{ name: t('files.blenderExecutable'), extensions: ['exe'] }]
+        : [{ name: t('files.allFiles'), extensions: ['*'] }]
     })
     if (result.canceled || result.filePaths.length === 0) {
       return null
@@ -394,7 +399,7 @@ app.whenReady().then(() => {
     }
     return {
       success: false,
-      error: test.error || 'Selected file is not a valid Blender executable.'
+      error: test.error || t('errors.notValidBlender')
     }
   })
 
@@ -442,8 +447,8 @@ app.whenReady().then(() => {
     if (mainWindow) {
       void showRecoveryDialog(
         mainWindow,
-        'The graphics context was lost.',
-        `The GPU driver reset or ran out of memory. ${RECOVERY_DETAIL}`,
+        t('main.gpuLost'),
+        t('main.gpuDetail', { detail: recoveryDetail() }),
         false
       )
     }

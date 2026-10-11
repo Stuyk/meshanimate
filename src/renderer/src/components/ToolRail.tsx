@@ -3,36 +3,31 @@ import { studio, type PoseTool } from '../anim/studio'
 import { mirrorLivePose } from '../anim/actions'
 import { MagnetIcon, MirrorIcon, MoveIcon, PoseIcon, Rotate3dIcon } from './icons'
 import { IconButton } from './ui'
+import { t } from '../i18n'
 
 const TOOLS: {
   value: PoseTool
   key: string
-  label: string
   Icon: (p: { size?: number }) => JSX.Element
 }[] = [
-  { value: 'pose', key: 'Q', label: 'Pose — drag handles to swing bones', Icon: PoseIcon },
-  {
-    value: 'rotate',
-    key: 'E',
-    label: 'Rotate gizmo — twist the selected joint on any axis',
-    Icon: Rotate3dIcon
-  },
-  { value: 'move', key: 'W', label: 'Move gizmo — translate the selected joint', Icon: MoveIcon }
+  { value: 'pose', key: 'Q', Icon: PoseIcon },
+  { value: 'rotate', key: 'E', Icon: Rotate3dIcon },
+  { value: 'move', key: 'W', Icon: MoveIcon }
 ]
 
 export default function ToolRail(): JSX.Element {
   return (
     <div class="w-11 min-w-11 flex flex-col items-center gap-1.5 py-2 bg-[var(--bg-panel-header)] border-r border-[var(--border-color)]">
       <For each={TOOLS}>
-        {(t) => (
+        {(tool) => (
           <IconButton
             size="md"
-            active={studio.tool() === t.value}
-            tooltip={`${t.label} (${t.key})`}
-            shortcut={t.key}
-            onClick={() => studio.setTool(t.value)}
+            active={studio.tool() === tool.value}
+            tooltip={t('tools.withKey', { label: t(`tools.${tool.value}`), key: tool.key })}
+            shortcut={tool.key}
+            onClick={() => studio.setTool(tool.value)}
           >
-            <t.Icon size={17} />
+            <tool.Icon size={17} />
           </IconButton>
         )}
       </For>
@@ -40,18 +35,13 @@ export default function ToolRail(): JSX.Element {
       <IconButton
         size="md"
         toggled={studio.snap().enabled}
-        tooltip="Snap to the view-plane grid and angle steps (S) — hold Ctrl to flip for one drag"
+        tooltip={t('tools.snapping')}
         shortcut="S"
         onClick={() => studio.setSnap({ enabled: !studio.snap().enabled })}
       >
         <MagnetIcon size={17} />
       </IconButton>
-      <IconButton
-        size="md"
-        tooltip="Mirror pose left ↔ right (M)"
-        shortcut="M"
-        onClick={mirrorLivePose}
-      >
+      <IconButton size="md" tooltip={t('tools.mirror')} shortcut="M" onClick={mirrorLivePose}>
         <MirrorIcon size={17} />
       </IconButton>
       <div class="w-6 h-px bg-[var(--border-color)] my-1" />
@@ -59,7 +49,7 @@ export default function ToolRail(): JSX.Element {
         {(n) => (
           <button
             type="button"
-            title={n === 1 ? 'FK — swing one bone (1)' : `IK — bend ${n} bones to reach (${n})`}
+            title={t('tools.reach', { count: n })}
             onClick={() => studio.setIkChain(n)}
             class={`w-9 h-6 rounded-[var(--ui-radius)] text-[10px] font-bold font-mono border cursor-pointer transition-colors ${
               studio.ikChain() === n
@@ -67,7 +57,7 @@ export default function ToolRail(): JSX.Element {
                 : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/5'
             }`}
           >
-            {n === 1 ? 'FK' : `IK${n}`}
+            {n === 1 ? t('tools.fk') : t('tools.ik', { count: n })}
           </button>
         )}
       </For>

@@ -26,7 +26,7 @@ export function keyTiming(keys: { frame: number; easing: Easing }[]): string {
  * bones, and imported animation isn't reshaped by edits elsewhere.
  *
  * Returns null when the clip has to be rewritten whole: an original key was
- * moved, deleted or re-eased, or the clip's start or length changed — then
+ * moved, deleted or re-eased, or the clip's start or length changed, then
  * every bone's timing is in play.
  */
 export function preservedBones(clip: Clip, src: ClipSource, rest: Pose): Set<string> | null {

@@ -1,24 +1,38 @@
 # Changelog
 
+## v1.0.0
+
+### Changes
+- All app text is in one translation file (`src/shared/i18n/en.ts`). New languages can be added by copying it. The app uses the system language when a translation exists, and English otherwise.
+- Rewrote the text across the app, README and website in plain language.
+- Added a one-minute video to the website and README.
+
+### Fixes
+- The recovery dialog (Wait / Reload / Quit) no longer depends on its English button labels.
+- The bone row on the timeline now shows Blender frame numbers in its tooltips, like the rest of the timeline.
+
+### Removed
+- The sample `robot.blend` and old backups are no longer in the repository.
+
 ## v0.1.0
 
-The first release of MeshAnimate: pose-to-pose animation for rigged Blender characters, built on the interface of the MeshCoat texture painter.
+First release of MeshAnimate: pose-to-pose animation for rigged Blender characters. It is built on the interface of the MeshCoat texture painter.
 
 ### Animate
-- Pivot-style posing: drag a handle at the tip of any bone to swing it; drag the root square to move the rig. FK reach of 2 or 3 bones, plus rotate and move gizmos for fine control.
-- Blender IK is evaluated live: drag the foot/hand ring to move the IK target, the knee/elbow to swing the pole. Matches Blender's solver to within half a degree.
-- Whole-pose keys with auto-key, Blender's easing options (Auto Bézier, Linear, Ease In/Out, Hold), copy/paste pose, mirror pose, and mirror-to-half-cycle for walk cycles.
-- Onion skin of neighbouring keys or every Nth frame, with configurable colours.
-- First-frame ghost (Shift+O): a pinned ghost of the clip's starting pose, visible at every frame and during playback.
-- Snapping in the view's side, front or top plane: grid points for handles, angle steps for swinging bones. Numpad view keys as in Blender.
-- Timeline with box selection, drag-to-retime, Alt+drag copy, per-bone motion row, preview range, and Blender frame numbering.
-- Reference image or video behind the model; video is frame-synced to the playhead.
-- Clip list with stick-figure thumbnails; double-click a bone in the skeleton list to frame it.
+- Drag a handle at the end of a bone to move it. Drag the root square to move the whole rig. Move 1, 2 or 3 bones at once, or use the rotate and move tools.
+- Blender IK works in the viewport. Drag the foot or hand ring to move the IK target, or the knee or elbow to move the pole. Results match Blender.
+- Whole-pose keys with auto-key, Blender's easing options (Auto Bézier, Linear, Ease In/Out, Hold), copy and paste pose, mirror pose, and mirror to half-cycle for walk cycles.
+- Onion skin for the keys before and after, or every Nth frame, with your own colours.
+- First-frame ghost (Shift+O): shows the clip's first frame at all times, including during playback.
+- Snapping in the front, side or top view: handles snap to a grid and bones turn in fixed steps. Numpad view keys work like in Blender.
+- Timeline with box select, drag to move keys, Alt+drag to copy, a row for the selected bone, a preview range, and Blender frame numbers.
+- Reference image or video behind the model. Videos follow the playhead.
+- Clip list with thumbnails. Double-click a bone in the skeleton list to frame it.
 
 ### Blender files
-- Opens `.blend` files directly (Blender runs in the background); every action becomes a clip with its real keyframes, at the scene's frame rate.
-- Saves back into the `.blend`: only changed actions, and within them only changed bones, are rewritten. New actions get a fake user and an NLA track; renames carry to tracks and strips.
-- Timestamped backup before every save; a failed save leaves the file untouched.
-- Detects when the file is saved elsewhere (e.g. in Blender): reloads on its own when there's no unsaved work here, otherwise offers merge / reload / keep mine.
-- Respects Blender's hidden bones and bone collections; reports constraints the preview can't evaluate.
-- Autosave recovery after a crash.
+- Opens `.blend` files directly, using Blender in the background. Each action becomes a clip with its own keys, at the scene's frame rate.
+- Saves back into the `.blend`. Only changed actions are saved, and only the changed bones in them. New actions get a fake user and an NLA track. Renaming a clip renames its track.
+- Makes a backup before every save. If a save fails, the file is not changed.
+- Notices when the file is saved somewhere else, like in Blender. Reloads if you have no unsaved work. Otherwise asks whether to merge, reload or keep your version.
+- Respects hidden bones and bone collections from Blender. Lists constraints the preview can't show.
+- Restores unsaved work after a crash.

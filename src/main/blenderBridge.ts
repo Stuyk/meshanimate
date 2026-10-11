@@ -1,4 +1,5 @@
 import { join } from 'path'
+import { t } from './i18n'
 import { homedir } from 'os'
 import { existsSync, readdirSync } from 'fs'
 import { execFile } from 'child_process'
@@ -14,7 +15,7 @@ export async function testBlenderExecutable(
   executablePath: string
 ): Promise<{ valid: boolean; version?: string; error?: string }> {
   if (!executablePath || !existsSync(executablePath)) {
-    return { valid: false, error: 'File does not exist' }
+    return { valid: false, error: t('errors.fileDoesNotExist') }
   }
 
   try {
@@ -26,7 +27,7 @@ export async function testBlenderExecutable(
     if (match) {
       return { valid: true, version: match[0].split('\n')[0].trim() }
     }
-    return { valid: true, version: 'Blender (unknown version)' }
+    return { valid: true, version: t('errors.unknownBlenderVersion') }
   } catch (err) {
     return {
       valid: false,

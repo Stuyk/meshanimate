@@ -1,5 +1,6 @@
 import { Show, type JSX } from 'solid-js'
 import { XIcon } from '../icons'
+import { t } from '../../i18n'
 
 export interface ToastData {
   id: number
@@ -38,12 +39,13 @@ const TYPE_CONFIG = {
 export default function Toast(props: ToastProps): JSX.Element {
   return (
     <Show when={props.toast}>
-      {(t) => {
+      {(toast) => {
         const config = ():
           | { border: string; dot: string; bg: string }
           | { border: string; dot: string; bg: string }
           | { border: string; dot: string; bg: string }
-          | { border: string; dot: string; bg: string } => TYPE_CONFIG[t().type] ?? TYPE_CONFIG.info
+          | { border: string; dot: string; bg: string } =>
+          TYPE_CONFIG[toast().type] ?? TYPE_CONFIG.info
         return (
           <div
             class={`fixed top-14 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2.5 px-3.5 py-2 rounded-lg border shadow-xl shadow-black/60 backdrop-blur-sm text-xs text-zinc-100 select-none animate-in fade-in slide-in-from-top-3 duration-150 cursor-pointer ${
@@ -52,7 +54,7 @@ export default function Toast(props: ToastProps): JSX.Element {
             onClick={props.onClose}
           >
             <span class={`w-2 h-2 rounded-full ${config().dot}`} />
-            <span class="font-medium">{t().text}</span>
+            <span class="font-medium">{toast().text}</span>
             <button
               type="button"
               class="ml-1 p-0.5 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
@@ -60,7 +62,7 @@ export default function Toast(props: ToastProps): JSX.Element {
                 e.stopPropagation()
                 props.onClose()
               }}
-              title="Dismiss"
+              title={t('common.dismiss')}
             >
               <XIcon size={12} />
             </button>

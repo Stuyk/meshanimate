@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MeshAnimate — Pose-to-Pose Animation for Blender Rigs</title>
-  <meta name="description" content="Pivot-style pose-to-pose animation for rigged Blender characters. Grab a bone, drag it, key it. Onion skins, IK, snapping, and saving straight back into your .blend. Free, local, GPL-3.0." />
-  <meta property="og:title" content="MeshAnimate — Pose-to-Pose Animation for Blender Rigs" />
-  <meta property="og:description" content="Grab a bone, drag it, key it. Onion skins, Blender IK, snapping, and saves straight back into your .blend." />
+  <title>MeshAnimate: Pose-to-Pose Animation for Blender Rigs</title>
+  <meta name="description" content="Pose-to-pose animation for rigged Blender characters. Drag bones to pose them, use onion skin, IK and snapping, and save back into your .blend. Free and open source." />
+  <meta property="og:title" content="MeshAnimate: Pose-to-Pose Animation for Blender Rigs" />
+  <meta property="og:description" content="Drag bones to pose them. Onion skin, IK, snapping, and saving back into your .blend." />
   <meta property="og:image" content="social-preview.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="MeshAnimate — Pose-to-Pose Animation for Blender Rigs" />
-  <meta name="twitter:description" content="Grab a bone, drag it, key it. Onion skins, Blender IK, snapping, and saves straight back into your .blend." />
+  <meta name="twitter:title" content="MeshAnimate: Pose-to-Pose Animation for Blender Rigs" />
+  <meta name="twitter:description" content="Drag bones to pose them. Onion skin, IK, snapping, and saving back into your .blend." />
   <meta name="twitter:image" content="social-preview.png" />
   <link rel="icon" href="icon.png" />
   <style>
@@ -147,8 +147,8 @@
       <nav class="links">
         <a href="#video">Video</a>
         <a href="#features">Features</a>
-        <a href="#blend">Your .blend</a>
-        <a href="#keys">Keys</a>
+        <a href="#blend">Saving</a>
+        <a href="#keys">Shortcuts</a>
         <a href="https://github.com/stuyk/meshanimate">GitHub</a>
       </nav>
     </div>
@@ -159,8 +159,8 @@
       <img class="icon" src="icon.png" alt="MeshAnimate icon" />
       <h1>Grab a bone. Drag it. Key it.</h1>
       <p class="lede">
-        Pivot-style pose-to-pose animation for rigged Blender characters — onion skins, a timeline
-        you can read at a glance, and your animation saved straight back into the .blend.
+        Pose-to-pose animation for rigged Blender characters, like Pivot. Drag bones to pose them,
+        and save your animation back into the .blend.
       </p>
       <div class="cta">
         <a class="btn primary" href="https://github.com/stuyk/meshanimate/releases">Download</a>
@@ -173,12 +173,12 @@
 
     <section id="video">
       <div class="wrap">
-        <h2>See it in action</h2>
-        <p class="sub">One minute, start to finish: open a .blend, key a walk cycle in side view, refine it with IK and onion skin, and save it back.</p>
+        <h2>Video</h2>
+        <p class="sub">A one-minute walkthrough: open a .blend, make a walk cycle, and save it.</p>
         <div class="shot video">
           <iframe
             src="https://www.youtube-nocookie.com/embed/d1_FvcEW-b4?rel=0"
-            title="MeshAnimate walkthrough: keying a walk cycle"
+            title="MeshAnimate walkthrough"
             loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerpolicy="strict-origin-when-cross-origin"
@@ -190,32 +190,32 @@
 
     <section id="features">
       <div class="wrap">
-        <h2>Everything you need to block out motion</h2>
-        <p class="sub">No graph editors, no dope sheets to learn. Pose, move along the timeline, pose again.</p>
+        <h2>Features</h2>
+        <p class="sub">Pose, move to another frame, pose again.</p>
         <div class="grid">
           <div class="card">
             <h3><span class="dot" style="background: var(--handle)"></span> Pose by dragging</h3>
-            <p>Every bone has a handle at its tip — drag it and the bone swings, like Pivot. The orange square moves the whole rig; gizmos are there for precise turns.</p>
+            <p>Each bone has a handle at its end. Drag it to move the bone. The orange square moves the whole rig. Rotate and move tools are there for fine control.</p>
           </div>
           <div class="card">
-            <h3><span class="dot" style="background: var(--root)"></span> Your rig's IK</h3>
-            <p>Limbs driven by Blender IK are posed by dragging the hand or foot, with poles aiming the elbow and knee — matching Blender's solver to within half a degree.</p>
+            <h3><span class="dot" style="background: var(--root)"></span> IK</h3>
+            <p>Limbs that use Blender IK are posed by dragging the hand or foot. Poles point the knee and elbow. The result matches Blender.</p>
           </div>
           <div class="card">
             <h3><span class="dot" style="background: #ff5c5c"></span> Onion skin</h3>
-            <p>See the previous and next poses as coloured ghosts while you work, or every Nth frame, so spacing is easy to judge — and pin a ghost of the first frame to keep the starting pose in view.</p>
+            <p>See the poses before and after the current frame as ghosts. You can also show the first frame as a ghost at all times.</p>
           </div>
           <div class="card">
-            <h3><span class="dot" style="background: var(--accent)"></span> A clear timeline</h3>
-            <p>One row of pose keys, one row for where the selected bone moves. Drag to retime, box-select, set easing, and loop just the part you're polishing.</p>
+            <h3><span class="dot" style="background: var(--accent)"></span> Timeline</h3>
+            <p>One row of keys for the whole pose. Drag keys to move them, box-select, set easing, and loop part of a clip.</p>
           </div>
           <div class="card">
             <h3><span class="dot" style="background: #10b981"></span> Snapping</h3>
-            <p>From the side, front or top, handles land on a grid and bones swing in clean angle steps — measured in Blender units.</p>
+            <p>In front, side or top view, handles snap to a grid and bones turn in fixed steps.</p>
           </div>
           <div class="card">
-            <h3><span class="dot" style="background: var(--pole)"></span> Cycles and reference</h3>
-            <p>Mirror a pose, or key its mirror half a cycle later for walks. Pose against a reference image or a video that follows the playhead.</p>
+            <h3><span class="dot" style="background: var(--pole)"></span> Walk cycles and reference</h3>
+            <p>Mirror a pose, or key the mirrored pose half a cycle later. Put an image or video behind the model.</p>
           </div>
         </div>
       </div>
@@ -223,24 +223,24 @@
 
     <section>
       <div class="wrap">
-        <h2>A closer look</h2>
-        <p class="sub">Screenshots from the app with the sample robot rig.</p>
+        <h2>Screenshots</h2>
+        <p class="sub">The app with a sample robot rig.</p>
         <div class="gallery">
           <figure>
             <img src="screenshots/ik-snap.png" alt="Dragging an IK foot target onto the side-view snap grid" loading="lazy" />
-            <figcaption>Side view: dragging a foot's IK target onto the 5 cm snap grid.</figcaption>
+            <figcaption>Moving a foot onto the 5 cm grid in side view.</figcaption>
           </figure>
           <figure>
             <img src="screenshots/angle-snap.png" alt="Swinging a forearm in 15 degree steps" loading="lazy" />
-            <figcaption>Swinging a forearm in 15° steps, with the angle shown as you drag.</figcaption>
+            <figcaption>Turning a forearm in 15° steps.</figcaption>
           </figure>
           <figure>
             <img src="screenshots/timeline.png" alt="Timeline with a preview range and box-selected keys" loading="lazy" />
-            <figcaption>A preview range looping frames 11–27, box-selected keys, onion ghosts and clip thumbnails.</figcaption>
+            <figcaption>A preview range, selected keys and onion skin.</figcaption>
           </figure>
           <figure>
             <img src="screenshots/reference.png" alt="Posing against a reference image" loading="lazy" />
-            <figcaption>Posing against a reference image behind the model.</figcaption>
+            <figcaption>Posing with a reference image.</figcaption>
           </figure>
         </div>
       </div>
@@ -248,37 +248,41 @@
 
     <section id="blend">
       <div class="wrap">
-        <h2>Your .blend stays yours</h2>
-        <p class="sub">MeshAnimate reads and writes .blend files through Blender itself, and treats them carefully.</p>
+        <h2>Saving</h2>
+        <p class="sub">MeshAnimate uses Blender to open and save .blend files.</p>
         <ul class="checks">
-          <li><b>Backed up first.</b> Every save copies the file to <code>.meshanimate-backups/</code> beside it; the newest 20 are kept.</li>
-          <li><b>Only what you changed.</b> Untouched actions are left as they were; in an edited action, bones you didn't touch keep Blender's original curves.</li>
-          <li><b>Proper Blender actions.</b> New animations get a fake user and their own NLA track; renaming a clip renames its track.</li>
-          <li><b>Plays like Blender.</b> Untouched actions preview Blender's own evaluation; edits use the same Bézier, easing and quaternion maths, checked against Blender in the test suite.</li>
-          <li><b>Notices outside changes.</b> Save the file from Blender while it's open here and MeshAnimate reloads it — or, with unsaved work, offers to merge.</li>
+          <li><b>Backups.</b> Each save first copies the file to <code>.meshanimate-backups/</code> next to it. The last 20 copies are kept.</li>
+          <li><b>Only your changes.</b> Only the actions and bones you changed are saved. The rest of the file is not touched.</li>
+          <li><b>Normal Blender actions.</b> New actions get a fake user and their own NLA track. Renaming a clip renames its track.</li>
+          <li><b>Plays like Blender.</b> Playback uses the same curves and easing as Blender.</li>
+          <li><b>Outside changes.</b> If you save the file in Blender while it's open here, MeshAnimate reloads it. If you have unsaved work, it asks whether to merge.</li>
         </ul>
         <div class="note">
-          Rigs that drive their mesh through other constraints — Rigify's Copy Transforms, Stretch To and
-          drivers, for example — can be animated and saved, but the viewport preview is only approximate
-          for them. MeshAnimate tells you when it opens one.
+          Some rigs move the mesh with other constraints, like Rigify's Copy Transforms, Stretch To or
+          drivers. You can still animate and save them, but the preview may not match Blender exactly.
+          MeshAnimate tells you when this is the case.
         </div>
       </div>
     </section>
 
     <section id="keys">
       <div class="wrap">
-        <h2>Keys worth knowing</h2>
+        <h2>Shortcuts</h2>
         <p class="sub">Press <kbd>?</kbd> in the app for the full list.</p>
         <table>
           <tr><td><kbd>Space</kbd></td><td>Play / pause</td></tr>
-          <tr><td><kbd>←</kbd> <kbd>→</kbd> · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>Previous / next frame · key</td></tr>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Previous / next frame</td></tr>
+          <tr><td><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>Previous / next key</td></tr>
           <tr><td><kbd>K</kbd></td><td>Key the current pose</td></tr>
-          <tr><td><kbd>M</kbd> · <kbd>Shift</kbd>+<kbd>M</kbd></td><td>Mirror pose · mirror to half-cycle</td></tr>
-          <tr><td><kbd>S</kbd></td><td>Snapping on / off (hold <kbd>Ctrl</kbd> to flip it for one drag)</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Mirror pose</td></tr>
+          <tr><td><kbd>Shift</kbd>+<kbd>M</kbd></td><td>Mirror to half-cycle</td></tr>
+          <tr><td><kbd>S</kbd></td><td>Snapping on / off (hold <kbd>Ctrl</kbd> to switch it for one drag)</td></tr>
           <tr><td><kbd>Num 1</kbd> <kbd>3</kbd> <kbd>7</kbd></td><td>Front / side / top view (<kbd>Ctrl</kbd>: opposite side)</td></tr>
-          <tr><td><kbd>[</kbd> · <kbd>]</kbd> · <kbd>\</kbd></td><td>Preview range start · end · clear</td></tr>
-          <tr><td><kbd>Q</kbd> <kbd>E</kbd> <kbd>W</kbd></td><td>Pose handles / rotate gizmo / move gizmo</td></tr>
-          <tr><td><kbd>O</kbd> · <kbd>Shift</kbd>+<kbd>O</kbd></td><td>Onion skin · first-frame ghost</td></tr>
+          <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Preview range start / end</td></tr>
+          <tr><td><kbd>\</kbd></td><td>Clear preview range</td></tr>
+          <tr><td><kbd>Q</kbd> <kbd>E</kbd> <kbd>W</kbd></td><td>Pose / rotate / move tool</td></tr>
+          <tr><td><kbd>O</kbd></td><td>Onion skin</td></tr>
+          <tr><td><kbd>Shift</kbd>+<kbd>O</kbd></td><td>First-frame ghost</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save into the .blend</td></tr>
         </table>
       </div>
@@ -286,15 +290,15 @@
 
     <section>
       <div class="wrap">
-        <h2>Requirements &amp; building</h2>
+        <h2>Requirements</h2>
         <p class="sub">
-          You need <a href="https://www.blender.org/download/">Blender</a> installed (tested with 5.2);
-          MeshAnimate finds it automatically or you can point to it in Preferences. Your .blend needs an
-          armature — skinned meshes and rigid parts parented to bones both work.
+          You need <a href="https://www.blender.org/download/">Blender</a> installed (tested with 5.2).
+          MeshAnimate finds it on its own, or you can set the path in Preferences. Your .blend needs an
+          armature. Skinned meshes and parts parented to bones both work.
         </p>
         <pre>bun install          # or npm install
 bun run dev          # run with hot reload
-bun run test         # unit tests, including Blender parity fixtures
+bun run test         # unit tests
 bun run build:linux  # or build:win / build:mac</pre>
       </div>
     </section>
@@ -302,7 +306,7 @@ bun run build:linux  # or build:win / build:mac</pre>
 
   <footer>
     <div class="wrap">
-      <span>MeshAnimate · GPL-3.0-or-later</span>
+      <span>MeshAnimate, GPL-3.0-or-later</span>
       <a href="https://github.com/stuyk/meshanimate">github.com/stuyk/meshanimate</a>
     </div>
   </footer>

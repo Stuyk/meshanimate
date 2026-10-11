@@ -2,6 +2,7 @@ import { loadRig, type BlendMeta, type Rig } from './rig'
 import { createClip, keysFingerprint, type ClipSource } from './studio'
 import { keyTiming, preservedBones } from './preserve'
 import { uid, type Clip } from './types'
+import { t } from '../i18n'
 
 export interface BlendDocument {
   rig: Rig
@@ -14,7 +15,7 @@ export interface BlendDocument {
 export async function openBlendDocument(blendPath: string): Promise<BlendDocument> {
   const res = await window.api.openBlend(blendPath)
   if (!res.ok || !res.glbPath || !res.metaJson) {
-    throw new Error(res.error ?? 'Blender could not read the file')
+    throw new Error(res.error ?? t('errors.blenderCouldNotRead'))
   }
   const meta = JSON.parse(res.metaJson) as BlendMeta
   if (meta.error) {
@@ -136,8 +137,8 @@ export function buildSavePayload(
 
 /**
  * After a save, the file on disk is the new baseline. Blender re-reads it so
- * every clip previews exactly what was written — including the curves of
- * bones a save preserved — and so later edits are compared with what's
+ * every clip previews exactly what was written, including the curves of
+ * bones a save preserved, and so later edits are compared with what's
  * really in the file.
  */
 export async function sourcesFromDisk(
@@ -180,7 +181,7 @@ export interface MergeResult {
 /**
  * Combines the file as it is now on disk with unsaved work here: clips edited
  * (or added, renamed, deleted) in MeshAnimate keep their edits, everything
- * else takes the disk version — so work done in Blender meanwhile isn't lost.
+ * else takes the disk version, so work done in Blender meanwhile isn't lost.
  * Where both sides changed the same action, this app's version wins and the
  * clip is reported as a conflict.
  */

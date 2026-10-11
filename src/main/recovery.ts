@@ -15,7 +15,7 @@ async function ensureBackupsDir(): Promise<string> {
   return dir
 }
 
-/** Deletes one pruned rolling backup; a failed delete is harmless — the file just lingers. */
+/** Deletes one pruned rolling backup; a failed delete is harmless. The file just stays. */
 async function deleteRollingBackup(path: string): Promise<void> {
   try {
     await unlink(path)

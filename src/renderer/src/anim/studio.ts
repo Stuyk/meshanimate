@@ -11,6 +11,7 @@ import {
 import { uid, type Clip, type Easing, type Pose, type PoseKey } from './types'
 import type { SnapSettings, ViewPlaneName } from '../viewport/snap'
 import { preservedBones } from './preserve'
+import { t } from '../i18n'
 
 const SNAP_KEY = 'meshanimate:snap'
 const REFERENCE_KEY = 'meshanimate:reference'
@@ -91,7 +92,7 @@ function loadDisplay(): DisplaySettings {
 
 /**
  * A clip as it was read from the .blend. Saving compares against this, so only
- * actions that actually changed are rewritten — everything else in the file
+ * actions that actually changed are rewritten, everything else in the file
  * stays exactly as Blender wrote it.
  */
 export interface ClipSource {
@@ -248,7 +249,7 @@ function createStudio() {
     batch(() => {
       setClipsRaw(mutate(clips()))
       setDirty(true)
-      setHistoryTick((t) => t + 1)
+      setHistoryTick((n) => n + 1)
     })
   }
 
@@ -267,7 +268,7 @@ function createStudio() {
     }
     redoStack.push(snapshot())
     restore(prev)
-    setHistoryTick((t) => t + 1)
+    setHistoryTick((n) => n + 1)
     return true
   }
 
@@ -278,7 +279,7 @@ function createStudio() {
     }
     undoStack.push(snapshot())
     restore(next)
-    setHistoryTick((t) => t + 1)
+    setHistoryTick((n) => n + 1)
     return true
   }
 
@@ -288,7 +289,7 @@ function createStudio() {
   function clearHistory(): void {
     undoStack.length = 0
     redoStack.length = 0
-    setHistoryTick((t) => t + 1)
+    setHistoryTick((n) => n + 1)
   }
 
   /** Preview ranges per clip: playback stays between these frames. Not saved. */
@@ -347,7 +348,7 @@ function createStudio() {
 
   const seamCache = new WeakMap<PoseKey[], boolean>()
   /**
-   * The clip's last frame is the same pose as its first — how cycles are
+   * The clip's last frame is the same pose as its first. This is how cycles are
    * usually keyed in Blender. Looping playback skips the duplicate, and
    * half-cycle mirroring measures the cycle without it.
    */
@@ -424,7 +425,7 @@ function createStudio() {
 
   /**
    * Shifts keys in time. Keys already sitting on a destination frame are
-   * overwritten — dropping a pose onto another one replaces it. With `copy`,
+   * overwritten: dropping a pose onto another one replaces it. With `copy`,
    * the originals stay where they were.
    */
   function moveKeys(ids: string[], delta: number, copy: boolean): void {
@@ -511,7 +512,7 @@ function createStudio() {
     const copy: Clip = {
       ...src,
       id: uid('clip'),
-      name: uniqueName(`${src.name} Copy`),
+      name: uniqueName(t('clips.copyName', { name: src.name })),
       keys: src.keys.map((k) => ({ ...k, id: uid('key'), pose: clonePose(k.pose) }))
     }
     edit((all) => [...all, copy])
@@ -655,7 +656,7 @@ function createStudio() {
     display,
     setDisplay,
     poseTick,
-    bumpPose: () => setPoseTick((t) => t + 1),
+    bumpPose: () => setPoseTick((n) => n + 1),
     unkeyed,
     setUnkeyed,
     dirty,

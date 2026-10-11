@@ -2,6 +2,7 @@ import { app } from 'electron'
 import { basename, dirname, join } from 'path'
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
+import { t } from './i18n'
 import { execFile } from 'child_process'
 import loadScript from '../../resources/blender/meshanimate_load.py?asset'
 import saveScript from '../../resources/blender/meshanimate_save.py?asset'
@@ -19,7 +20,7 @@ function unpacked(path: string): string {
 async function runBlender(args: string[], timeoutMs: number): Promise<string> {
   const { path: blender } = await getEffectiveBlender()
   if (!blender) {
-    throw new Error('Blender was not found. Use "Locate Blender…" to point MeshAnimate at it.')
+    throw new Error(t('errors.blenderNotFound'))
   }
   return new Promise((resolve, reject) => {
     execFile(
@@ -36,7 +37,7 @@ async function runBlender(args: string[], timeoutMs: number): Promise<string> {
             .filter((l) => l.trim())
             .slice(-12)
             .join('\n')
-          reject(new Error(tail || (err ? err.message : 'Blender did not finish')))
+          reject(new Error(tail || (err ? err.message : t('errors.blenderDidNotFinish'))))
           return
         }
         resolve(output)
@@ -53,7 +54,7 @@ export interface OpenedBlend {
 /** Reads a .blend through Blender: a display model plus rig/action data. */
 export async function openBlend(blendPath: string): Promise<OpenedBlend> {
   if (!existsSync(blendPath)) {
-    throw new Error(`File not found: ${blendPath}`)
+    throw new Error(t('errors.fileNotFound', { path: blendPath }))
   }
   const dir = join(app.getPath('temp'), 'meshanimate', `open-${Date.now()}`)
   await mkdir(dir, { recursive: true })
@@ -100,7 +101,7 @@ export interface SavedBlend {
  * Writes clips into a .blend as actions. `sourcePath` is the file the rig was
  * read from; `outPath` is where to save (the same file, or a Save As target).
  * Whatever is at `outPath` is backed up first. Blender saves straight to the
- * target — it writes `file.blend@` and renames it into place only once the
+ * target. It writes `file.blend@` and renames it into place only once the
  * write succeeded, so a failed save leaves the original intact, and relative
  * texture paths stay valid (saving elsewhere and copying back would not).
  */

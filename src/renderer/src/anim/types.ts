@@ -5,31 +5,28 @@
 
 export type Easing = 'bezier' | 'linear' | 'easeInOut' | 'easeIn' | 'easeOut' | 'step'
 
-export const EASING_OPTIONS: { value: Easing; label: string; title: string }[] = [
-  {
-    value: 'bezier',
-    label: 'Auto',
-    title: "Blender's default: smooth Bézier with auto-clamped handles"
-  },
-  { value: 'linear', label: 'Linear', title: 'Constant speed between this key and the next' },
-  { value: 'easeInOut', label: 'Ease In-Out', title: 'Slow out of this key, slow into the next' },
-  { value: 'easeIn', label: 'Ease In', title: 'Start slow, arrive fast' },
-  { value: 'easeOut', label: 'Ease Out', title: 'Start fast, settle slowly' },
-  { value: 'step', label: 'Hold', title: 'Hold this pose until the next key (Constant)' }
+/** Easing choices in menu order; labels live in the translations (easing.*). */
+export const EASING_OPTIONS: Easing[] = [
+  'bezier',
+  'linear',
+  'easeInOut',
+  'easeIn',
+  'easeOut',
+  'step'
 ]
 
 export type Quat = [number, number, number, number]
 export type Vec3 = [number, number, number]
 
 /**
- * One bone's pose channels — Blender's matrix_basis: location, rotation (as a
+ * One bone's pose channels, Blender's matrix_basis: location, rotation (as a
  * quaternion, x y z w) and scale relative to the bone's rest pose. Identity
  * means "at rest".
  */
 export interface JointPose {
   r: Quat
   p: Vec3
-  /** Scale, stored only when it isn't 1,1,1 — absent means unscaled. */
+  /** Scale. Only stored when it isn't 1,1,1. */
   s?: Vec3
 }
 

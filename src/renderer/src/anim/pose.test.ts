@@ -132,7 +132,7 @@ describe('mirroring', () => {
 
   it('mirrors geometry exactly even when left and right bone rolls differ', () => {
     // Two arms mirrored in space, but the right one is rolled 90° about its
-    // own axis — the case a plain channel flip gets wrong.
+    // own axis. That is the case a plain channel flip gets wrong.
     const restL = new THREE.Matrix4().compose(
       new THREE.Vector3(0.5, 1, 0),
       new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -1)),

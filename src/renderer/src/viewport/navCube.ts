@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { t } from '../i18n'
 
 export interface NavCubeHandle {
   renderer: THREE.WebGLRenderer
@@ -6,14 +7,15 @@ export interface NavCubeHandle {
   resize: (size: number) => void
   /**
    * The face under a point on the cube's canvas, as the world direction from
-   * the orbit target to where the camera should sit to look at that side —
+   * the orbit target to where the camera should sit to look at that side,
    * or null when the click missed the cube.
    */
   pickFace: (clientX: number, clientY: number) => THREE.Vector3 | null
   dispose: () => void
 }
 
-const FACE_LABELS = ['RIGHT', 'LEFT', 'TOP', 'BOTTOM', 'FRONT', 'BACK']
+/** Cube faces in BoxGeometry's material order (+x, -x, +y, -y, +z, -z). */
+const FACES = ['right', 'left', 'top', 'bottom', 'front', 'back'] as const
 
 function makeFaceTexture(label: string): THREE.CanvasTexture {
   const size = 256
@@ -56,8 +58,8 @@ export function createNavCube(canvas: HTMLCanvasElement, size: number): NavCubeH
   key.position.set(1, 2, 3)
   scene.add(key)
 
-  const materials = FACE_LABELS.map(
-    (label) => new THREE.MeshBasicMaterial({ map: makeFaceTexture(label) })
+  const materials = FACES.map(
+    (face) => new THREE.MeshBasicMaterial({ map: makeFaceTexture(t(`viewport.navFaces.${face}`)) })
   )
   const cube = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), materials)
   scene.add(cube)
