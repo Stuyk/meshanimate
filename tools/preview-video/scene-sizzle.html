@@ -1,0 +1,494 @@
+<!doctype html>
+<!--
+  MeshAnimate — one-minute walkthrough on "Synthpop The Arcade Cut 60.wav".
+
+  It tells one story: open a .blend, make a clip and key a walk cycle in side view
+  (contact pose, mirror to half-cycle, passing pose), press play — then IK, timing, saving. Every screen is a real capture
+  from capture.mjs; drags are real flipbooks played at capture speed with the pointer
+  exactly where the mouse was, and clicks land on boxes recorded at capture time.
+
+  Track map (analyze-music.py): 139.988 BPM, bar 0 downbeat 0.040s, eight-bar phrases
+  (lighter bars 7, 15, 23, 31 close each phrase), the song ends at bar 32 (54.9s).
+  Chapters run three to six bars: the title lands on the downbeat, the action starts a beat or
+  two later, and each result is held before a soft crossfade into the next chapter.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>MeshAnimate — Walkthrough</title>
+<style>
+  :root {
+    --bg: #111113;
+    --text: #f2f2f4;
+    --muted: #a1a1aa;
+    --accent: #0084ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+  body { font-family: "Inter", system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+  .abs { position: absolute; }
+  .layer { position: absolute; inset: 0; overflow: hidden; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .45; }
+
+  .appwin { position: absolute; border-radius: 14px; background: #1c1c1e; box-shadow: 0 0 0 1px rgba(255,255,255,.09), 0 40px 120px rgba(0,0,0,.6), 0 0 140px rgba(0,132,255,.10); }
+  .appwin .view { position: absolute; inset: 0; border-radius: 14px; overflow: hidden; }
+
+  .step { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 28px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(0,132,255,.18); }
+  .eyebrow { font-size: 20px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .headline { font-size: 54px; font-weight: 800; line-height: 1.04; letter-spacing: -.03em; }
+  .sub { font-size: 24px; font-weight: 500; line-height: 1.45; color: var(--muted); }
+
+  .cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 30; }
+  .cursor svg { position: absolute; left: -3px; top: -2px; width: 28px; height: 28px; transform-origin: 3px 2px; filter: drop-shadow(0 3px 6px rgba(0,0,0,.55)); }
+  .ripple { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; border: 4px solid var(--accent); opacity: 0; z-index: 29; }
+  .ring { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 4px rgba(0,132,255,.6); opacity: 0; z-index: 28; }
+
+  .callout { position: absolute; z-index: 27; opacity: 0; }
+  .callout .dot { position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(0,132,255,.75); }
+  .callout .line { position: absolute; left: 0; top: 0; height: 2px; background: rgba(255,255,255,.85); transform-origin: 0 50%; }
+  .callout .pill { position: absolute; white-space: nowrap; padding: 8px 14px; border-radius: 10px; background: rgba(15,15,17,.92); border: 1px solid rgba(255,255,255,.18); font-size: 20px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+
+  .keycap { display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 78px; padding: 0 20px; border-radius: 16px; background: linear-gradient(#2e2e32, #1e1e20); box-shadow: 0 6px 0 #0a0a0b, 0 0 0 1px rgba(255,255,255,.12) inset; font-size: 30px; font-weight: 700; }
+  .chip { padding: 10px 18px; border-radius: 999px; font-size: 22px; font-weight: 600; background: rgba(0,132,255,.14); border: 1px solid rgba(0,132,255,.55); }
+
+  @keyframes show { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hide { to { opacity: 0; visibility: hidden; } }
+  @keyframes reveal { to { visibility: visible; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(30px); filter: blur(10px); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes winIn { from { opacity: 0; transform: translateY(70px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes iconPop { 0% { opacity: 0; transform: scale(.3) rotate(-12deg); } 60% { opacity: 1; transform: scale(1.08) rotate(2deg); } 100% { opacity: 1; transform: none; } }
+  @keyframes press { 0% { transform: scale(1); } 40% { transform: scale(.8); } 100% { transform: scale(1); } }
+  @keyframes ripple { 0% { opacity: .95; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.6); } }
+  @keyframes pulse { 0% { opacity: 0; transform: scale(1.8); } 30% { opacity: 1; transform: scale(1); } 70% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1); } }
+  @keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(var(--bx), var(--by)) scale(1.18); } }
+  @keyframes keyDown { 0% { transform: translateY(0); } 50% { transform: translateY(5px); box-shadow: 0 1px 0 #0a0a0b, 0 0 0 1px rgba(0,132,255,.8) inset; } 100% { transform: translateY(0); } }
+  @keyframes letter { from { opacity: 0; transform: translateY(30px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes calloutIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes grow { from { transform: rotate(var(--rot)) scaleX(0); } to { transform: rotate(var(--rot)) scaleX(1); } }
+</style>
+<script src="assets/capture.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="engine.js"></script>
+<script>
+/* ---------------- beat grid (analyze-music.py) ---------------- */
+const BPM = 139.988
+const BEAT = 60 / BPM
+const BAR = BEAT * 4
+const T0 = 0.040
+/** Video time of bar `bar` (+ beats); the video starts with the song. */
+const at = (bar, beat = 0) => T0 + bar * BAR + beat * BEAT
+const DURATION = +(at(32) + 1.1).toFixed(2)
+window.PREVIEW_MUSIC = 'Synthpop The Arcade Cut 60.wav'
+window.PREVIEW_MUSIC_START = 0
+window.PREVIEW_FADE = 1.0
+
+const SMOOTH = 'cubic-bezier(.22,1,.36,1)'
+const CAM = 'cubic-bezier(.45,0,.2,1)'
+/** Captured flipbooks play back at the speed they were performed. */
+const FLIP_FPS = 30
+
+/* ---------------- sound: a soft UI layer well under the music ---------------- */
+const SFX = []
+function sfx(file, t, gain = 0, anchor = 0) {
+  SFX.push({ file, start: Math.max(0, +(t - anchor).toFixed(4)), gain })
+}
+let whooshN = 0
+const whoosh = (t) => sfx(`Whoosh Short 0${(whooshN++ % 7) + 1}.wav`, t, -24, 0.15)
+const clickSfx = (t) => sfx('Interface Percussion Snap.wav', t, -13, 0.06)
+
+/* ---------------- layout ---------------- */
+const WIN_W = 1380
+const WIN_H = Math.round((WIN_W * C.size.h) / C.size.w)
+const WIN_Y = Math.round((1080 - WIN_H) / 2)
+const SIDE = {
+  L: { win: 480, text: 70 },
+  R: { win: 60, text: 1490 }
+}
+const TEXT_W = 370
+
+/* ---------------- helpers ---------------- */
+
+/** A chapter that crossfades in so its content lands on `t0`, and out into the next at `t1`. */
+function chapter(t0, t1, fade = 0.35) {
+  const l = el('div', 'layer', root, { visibility: 'hidden' })
+  // Not painted at all outside its own span (see showShot on why that matters).
+  A(l, 'reveal', Math.max(0, t0 - fade), 0.001, { ease: 'linear', fill: 'forwards' })
+  A(l, 'fadeIn', t0 - fade, fade, { ease: 'ease-out' })
+  if (t1 !== undefined) {
+    A(l, 'fadeOut', t1 - fade, fade, { ease: 'ease-in', fill: 'forwards' })
+    A(l, 'hide', t1 + 0.02, 0.001, { ease: 'linear', fill: 'forwards' })
+  }
+  return l
+}
+
+/** Step number, eyebrow, headline and sub in the text column. */
+function stepText(parent, side, { n, eyebrow, title, sub }, t) {
+  const box = el('div', 'abs', parent, { left: `${SIDE[side].text}px`, top: '300px', width: `${TEXT_W}px`, display: 'flex', 'flex-direction': 'column', gap: '18px' })
+  if (n) { A(el('div', 'step', box, {}, String(n)), 'rise', t, 0.6, { ease: SMOOTH }) }
+  if (eyebrow) { A(el('div', 'eyebrow', box, {}, eyebrow), 'rise', t + 0.06, 0.6, { ease: SMOOTH }) }
+  A(el('div', 'headline', box, {}, title), 'rise', t + 0.12, 0.7, { ease: SMOOTH })
+  if (sub) { A(el('div', 'sub', box, {}, sub), 'rise', t + 0.3, 0.7, { ease: SMOOTH }) }
+}
+
+/** A four-bar chapter: the app window on one side, the step text on the other. */
+function scene(bar, side, shot, text, bars = 4) {
+  const L = chapter(at(bar), at(bar + bars))
+  const win = appWindow(L, shot, SIDE[side].win, WIN_Y, WIN_W)
+  A(win.node, 'winIn', at(bar) - 0.3, 0.8, { ease: SMOOTH })
+  stepText(L, side, text, at(bar))
+  whoosh(at(bar))
+  return { L, win }
+}
+
+/** macOS pointer inside the window's camera (zooms carry it). Positions are capture CSS px. */
+function pointer(win, x, y, tIn, tOut) {
+  const c = el('div', 'cursor', win.cam)
+  c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 2 L4 19 L8.6 14.8 L11.6 21.6 L14.4 20.4 L11.4 13.7 L17.6 13.4 Z" fill="#111" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>'
+  A(c, 'fadeIn', tIn, 0.25, { ease: 'ease-out' })
+  if (tOut !== undefined) { A(c, 'fadeOut', tOut, 0.3, { ease: 'ease-in', fill: 'forwards' }) }
+  tween(c, `translate(${(x * win.k).toFixed(1)}px, ${(y * win.k).toFixed(1)}px)`, tIn, 0.01)
+  win.pointer = c
+  return c
+}
+
+function moveTo(win, x, y, t, dur = 0.6, ease = 'cubic-bezier(.3,.7,.2,1)') {
+  tween(win.pointer, `translate(${(x * win.k).toFixed(1)}px, ${(y * win.k).toFixed(1)}px)`, t, dur, ease)
+}
+
+function click(win, x, y, t) {
+  clickSfx(t)
+  A(win.pointer.firstChild, 'press', t, 0.22, { ease: 'ease-out', fill: 'none' })
+  const r = el('div', 'ripple', win.cam, { left: `${x * win.k}px`, top: `${y * win.k}px` })
+  A(r, 'ripple', t, 0.6, { ease: 'ease-out', fill: 'none' })
+}
+
+/** A pulsing ring that says "grab here", just before a drag. */
+function ring(win, x, y, t) {
+  const r = el('div', 'ring', win.cam, { left: `${x * win.k}px`, top: `${y * win.k}px` })
+  A(r, 'pulse', t, 0.9, { ease: 'ease-out', fill: 'none' })
+}
+
+const centre = (name) => { const b = C.boxes[name]; return { x: b.x + b.w / 2, y: b.y + b.h / 2 } }
+
+/**
+ * Plays a captured drag at capture speed: the pointer glides onto the start point,
+ * a ring marks the handle, then frame i shows at t0 + i/FLIP_FPS with the pointer where
+ * the mouse was. Returns the time the last frame shows.
+ */
+function flip(win, seq, t0, { approach = 0.7, mark = true } = {}) {
+  const first = seq[0]
+  if (!win.pointer) { pointer(win, first.x + 90, first.y + 110, t0 - approach - 0.3) }
+  moveTo(win, first.x, first.y, t0 - approach, approach * 0.85)
+  if (mark) { ring(win, first.x, first.y, t0 - 0.45) }
+  click(win, first.x, first.y, t0)
+  const dt = 1 / FLIP_FPS
+  seq.forEach((f, i) => {
+    if (i > 0) {
+      showShot(win, f.file, t0 + i * dt)
+      moveTo(win, f.x, f.y, t0 + (i - 1) * dt, dt, 'linear')
+    }
+  })
+  return t0 + (seq.length - 1) * dt
+}
+
+/** A label with a leader line pointing at (x, y) in capture px; (dx, dy) places the label. */
+function callout(win, x, y, text, t, tOut, { dx = 140, dy = -90 } = {}) {
+  const k = win.k
+  const c = el('div', 'callout', win.cam, { left: `${x * k}px`, top: `${y * k}px` })
+  el('div', 'dot', c)
+  const len = Math.hypot(dx, dy)
+  const line = el('div', 'line', c, { width: `${len}px`, '--rot': `${Math.atan2(dy, dx)}rad` })
+  A(line, 'grow', t, 0.35, { ease: SMOOTH })
+  el('div', 'pill', c, { left: `${dx + (dx >= 0 ? 6 : -6)}px`, top: `${dy - 22}px`, transform: dx >= 0 ? 'none' : 'translateX(-100%)' }, text)
+  A(c, 'calloutIn', t, 0.3, { ease: SMOOTH })
+  if (tOut !== undefined) { A(c, 'fadeOut', tOut, 0.3, { ease: 'ease-in', fill: 'forwards' }) }
+  return c
+}
+
+/** Centre of a drag in capture px, for the camera. */
+function midOf(seq) {
+  const xs = seq.map((f) => f.x), ys = seq.map((f) => f.y)
+  return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 }
+}
+
+/** Keycaps under the step text; press() animates one with a key sound. */
+function keycaps(parent, side, labels, t) {
+  const row = el('div', 'abs', parent, { left: `${SIDE[side].text}px`, top: '800px', display: 'flex', gap: '12px' })
+  A(row, 'rise', t, 0.5, { ease: SMOOTH })
+  return labels.map((l) => el('div', 'keycap', row, {}, l))
+}
+function press(cap, t) {
+  A(cap, 'keyDown', t, 0.3, { ease: 'ease-out', fill: 'none' })
+  sfx('Keyboard A.wav', t, -12, 0.06)
+}
+
+/* ======================= BACKGROUND ======================= */
+{
+  const bg = el('div', 'layer', root, { 'z-index': '0' })
+  ;[['#0a4a8f', -300, -300, 1100, '260px', '180px'], ['#3a1f6e', 1150, 500, 1100, '-240px', '-160px'], ['#0b5c4a', 650, 720, 900, '-140px', '-240px']]
+    .forEach(([c, x, y, s, bx, by]) => {
+      const b = el('div', 'blob', bg, { left: `${x}px`, top: `${y}px`, width: `${s}px`, height: `${s}px`, background: c, '--bx': bx, '--by': by })
+      A(b, 'drift', 0, DURATION / 2, { ease: 'ease-in-out', iter: 2 })
+    })
+}
+
+/* ======================= INTRO (bars 0–1) ======================= */
+{
+  const L = chapter(0.05, at(2))
+  const icon = el('img', 'abs', L, { left: '850px', top: '200px', width: '220px', height: '220px' })
+  icon.src = '../../build/icon.svg'
+  A(icon, 'iconPop', at(0), 0.7, { ease: SMOOTH })
+  const word = el('div', 'abs', L, { left: '0', right: '0', top: '455px', 'text-align': 'center', 'font-size': '124px', 'font-weight': '800', 'letter-spacing': '-.045em' })
+  ;'MeshAnimate'.split('').forEach((ch, i) => {
+    A(el('span', '', word, { display: 'inline-block' }, ch), 'letter', at(0, 1.5) + i * 0.04, 0.55, { ease: SMOOTH })
+  })
+  A(el('div', 'abs sub', L, { left: '0', right: '0', top: '620px', 'text-align': 'center', 'font-size': '34px' }, 'Pose-to-pose animation for your Blender rigs'), 'rise', at(0, 3), 0.7, { ease: SMOOTH })
+  A(el('div', 'abs', L, { left: '0', right: '0', top: '690px', 'text-align': 'center', 'font-size': '24px', color: '#71717a' }, 'Grab a bone. Drag it. Key it. Like Pivot — for real 3D characters.'), 'rise', at(1, 1), 0.7, { ease: SMOOTH })
+  sfx('Interface Accept Glassy Snap.wav', at(0), -14, 0.05)
+}
+
+/* ======================= 1 · OPEN (bars 2–5) ======================= */
+{
+  const { win } = scene(2, 'L', 'start', {
+    n: 1,
+    eyebrow: 'Open',
+    title: 'Open your .blend.',
+    sub: 'Your rig, its IK and every action come straight from Blender — nothing to import or export.'
+  })
+  const open = centre('openButton')
+  pointer(win, open.x + 300, open.y + 220, at(2, 0.6))
+  moveTo(win, open.x, open.y, at(2, 0.7), 0.8)
+  ring(win, open.x, open.y, at(2, 1.9))
+  click(win, open.x, open.y, at(2, 2.3))
+  showShot(win, 'opened', at(2, 2.6), 0.3)
+  A(win.pointer, 'fadeOut', at(2, 2.4), 0.3, { fill: 'forwards' })
+  // The load report: what came in from the file.
+  const tb = C.boxes.openToast
+  focus(win, tb.x + tb.w / 2, tb.y + 220, 1.8, at(2, 3), 0.7, CAM)
+  callout(win, tb.x + tb.w / 2, tb.y + tb.h + 8, 'Read straight from the file', at(3, 0.4), at(3, 3.4), { dx: 60, dy: 110 })
+  // Every action is a clip: click one and it plays with its own keys.
+  const clips = C.boxes.clips
+  focus(win, clips.x + clips.w / 2 - 150, clips.y + 190, 1.7, at(3, 3.3), 0.7, CAM)
+  const r = centre('runRow')
+  callout(win, clips.x + 30, clips.y + 70, 'Every action is a clip', at(4), at(4, 2.6), { dx: -170, dy: -40 })
+  pointer(win, r.x - 170, r.y + 140, at(4, 0.3))
+  moveTo(win, r.x, r.y, at(4, 0.5), 0.6)
+  click(win, r.x, r.y, at(4, 1.4))
+  A(win.pointer, 'fadeOut', at(4, 2), 0.3, { fill: 'forwards' })
+  const run = C.seqs.runFull
+  const t0 = at(4, 1.5)
+  const n = Math.floor((at(6) - t0) * 25)
+  for (let i = 0; i < n; i++) {
+    showShot(win, run[i % run.length].file, t0 + i / 25)
+  }
+  focus(win, 760, 560, 1.12, at(4, 2.2), 0.8, CAM)
+  const rk = C.points.runKey0
+  callout(win, rk.x, rk.y + 30, 'Its keys, as Blender has them', at(4, 3.2), undefined, { dx: 150, dy: -80 })
+}
+
+/* ======================= 2 · NEW CLIP, SIDE VIEW, CONTACT POSE (bars 6–10) ======================= */
+{
+  const { L, win } = scene(6, 'R', C.seqs.runFull[0].file, {
+    n: 2,
+    eyebrow: 'Walk cycle',
+    title: 'Side view. First step.',
+    sub: 'Make a clip, press 3 for the side view, then drag the feet and arms into a stride. Every drag is keyed.'
+  }, 5)
+  const nc = centre('newClip')
+  focus(win, 1100, 300, 1.25, at(6) - 0.3, 0.01)
+  pointer(win, nc.x - 200, nc.y + 160, at(6, 0.3))
+  moveTo(win, nc.x, nc.y, at(6, 0.4), 0.5)
+  click(win, nc.x, nc.y, at(6, 1))
+  showShot(win, 'newclip', at(6, 1.2), 0.15)
+  focus(win, 800, 500, 1.0, at(6, 1.3), 0.6, CAM)
+  moveTo(win, 1000, 330, at(6, 1.5), 0.6)
+  // Numpad 3: the side view.
+  const caps = keycaps(L, 'R', ['3'], at(6, 2))
+  press(caps[0], at(6, 3))
+  showShot(win, 'side', at(6, 3) + 0.05, 0.25)
+  focus(win, 730, 350, 1.3, at(6, 3), 0.7, CAM)
+  // The stride: front foot, back foot, then the arms swing against the legs.
+  let end = flip(win, C.seqs.stepL, at(7, 0.5), { approach: 0.55 })
+  end = flip(win, C.seqs.stepR, end + 0.5, { approach: 0.45 })
+  const sw = midOf(C.seqs.swingR)
+  focus(win, sw.x, sw.y + 40, 1.45, end + 0.1, 0.5, CAM)
+  end = flip(win, C.seqs.swingR, end + 0.5, { approach: 0.4 })
+  end = flip(win, C.seqs.swingL, end + 0.4, { approach: 0.35 })
+  A(win.pointer, 'fadeOut', end + 0.1, 0.3, { fill: 'forwards' })
+  showShot(win, 'contact', end + 0.15, 0.2)
+  focus(win, 760, 545, 1.1, end + 0.15, 0.6, CAM)
+  const k0 = C.points.key0
+  callout(win, k0.x, k0.y + 30, 'Contact pose, keyed', end + 0.4, undefined, { dx: 130, dy: -90 })
+}
+
+/* ======================= 3 · MIRROR + PASSING POSE (bars 11–16) ======================= */
+{
+  const { L, win } = scene(11, 'L', 'contact', {
+    n: 3,
+    eyebrow: 'Walk cycle',
+    title: 'Mirror it. Fill the middle.',
+    sub: 'Shift+M keys the opposite step half a cycle later. Scrub between them — onion skin shows both — and lift the passing leg.'
+  }, 6)
+  focus(win, 760, 545, 1.1, at(11) - 0.3, 0.01)
+  const caps = keycaps(L, 'L', ['Shift', 'M'], at(11, 0.5))
+  const mirror = (t) => {
+    press(caps[0], t)
+    press(caps[1], t + 0.12)
+  }
+  mirror(at(11, 2))
+  showShot(win, 'mirrored', at(11, 2.2), 0.15)
+  const k12 = C.points.key12
+  callout(win, k12.x, k12.y + 30, 'Opposite step, frame 13', at(11, 2.6), at(12, 2), { dx: 120, dy: -80 })
+  // Scrub to it: the other leg leads.
+  let end = flip(win, C.seqs.scrub12, at(12, 2), { approach: 0.6, mark: false })
+  // Back to the middle with onion skin: both steps show as ghosts.
+  end = flip(win, C.seqs.scrub6, end + 0.6, { approach: 0.45, mark: false })
+  const lift = C.seqs.lift
+  const m = midOf(lift)
+  focus(win, m.x + 20, m.y - 130, 1.5, end + 0.05, 0.6, CAM)
+  callout(win, m.x + 60, m.y - 150, 'Onion skin: both steps', end + 0.4, end + 2.2, { dx: 110, dy: -70 })
+  end = flip(win, lift, end + 0.85, { approach: 0.5 })
+  end = flip(win, C.seqs.rise, end + 0.4, { approach: 0.4 })
+  A(win.pointer, 'fadeOut', end + 0.1, 0.3, { fill: 'forwards' })
+  // And mirror the passing pose too: four keys, one loop.
+  mirror(end + 0.45)
+  showShot(win, 'mirrored2', end + 0.6, 0.15)
+  focus(win, 760, 555, 1.08, end + 0.5, 0.6, CAM)
+  const k18 = C.points.key18
+  callout(win, k18.x, k18.y + 30, 'Four keys. One loop.', end + 1.0, undefined, { dx: -150, dy: -90 })
+}
+
+/* ======================= 4 · PLAY (bars 17–18) ======================= */
+{
+  const { win } = scene(17, 'R', 'play-00', {
+    n: 4,
+    eyebrow: 'Playback',
+    title: 'Press play.',
+    sub: 'It walks — looped the way Blender will play it.'
+  }, 2)
+  const pl = centre('play')
+  focus(win, 760, 555, 1.08, at(17) - 0.3, 0.01)
+  pointer(win, pl.x + 200, pl.y - 160, at(17, 0.2))
+  moveTo(win, pl.x, pl.y, at(17, 0.3), 0.5)
+  click(win, pl.x, pl.y, at(17, 1))
+  A(win.pointer, 'fadeOut', at(17, 1.6), 0.3, { fill: 'forwards' })
+  const frames = C.seqs.play
+  const t0 = at(17, 1)
+  const fps = 25
+  const n = Math.floor((at(19) - t0) * fps)
+  for (let i = 1; i < n; i++) {
+    showShot(win, frames[i % frames.length].file, t0 + i / fps)
+  }
+  focus(win, 730, 375, 1.5, at(17, 1.5), BAR, CAM)
+}
+
+/* ======================= 5 · IK (bars 19–22) ======================= */
+{
+  const { L, win } = scene(19, 'L', 'ikStart', {
+    n: 5,
+    eyebrow: 'Blender IK',
+    title: 'Feet plant. Knees follow.',
+    sub: "Your rig's own IK, live. Press S to snap in the side plane, drop the hips — the feet stay put — and set a foot on the grid."
+  })
+  focus(win, 760, 380, 1.25, at(19) - 0.3, 0.01)
+  const caps = keycaps(L, 'L', ['S'], at(19, 1))
+  press(caps[0], at(19, 2.5))
+  showShot(win, 'snapOn', at(19, 2.6), 0.15)
+  const sb = C.boxes.snapBadge
+  callout(win, sb.x, sb.y + sb.h / 2, 'Snapping: side plane, 5 cm', at(19, 3), at(20, 3), { dx: -150, dy: 70 })
+  const hips = C.seqs.ikHips
+  let end = flip(win, hips, at(20, 2), { approach: 0.7 })
+  const foot = C.seqs.ikFoot
+  callout(win, foot[0].x, foot[0].y, 'Feet stay planted', end - 0.6, end + 1.0, { dx: 120, dy: -70 })
+  end = flip(win, foot, end + 1.2, { approach: 0.5 })
+  A(win.pointer, 'fadeOut', end + 0.6, 0.3, { fill: 'forwards' })
+  const last = foot[foot.length - 1]
+  focus(win, last.x + 120, last.y - 200, 1.6, end + 0.2, 0.7, CAM)
+  callout(win, last.x, last.y, 'On the 5 cm grid', end + 0.3, undefined, { dx: 130, dy: -80 })
+}
+
+/* ======================= 6 · TIMING (bars 23–26) ======================= */
+{
+  const { win } = scene(23, 'R', 'timingStart', {
+    n: 6,
+    eyebrow: 'Timing',
+    title: 'Shape the timing.',
+    sub: 'Drag a key to retime it. Onion skin shows the keys either side; the first-frame ghost keeps your start pose in view.'
+  })
+  const rt = C.seqs.retime
+  const m = midOf(rt)
+  focus(win, m.x + 60, m.y - 80, 2.0, at(23) - 0.3, 0.01)
+  callout(win, rt[0].x, rt[0].y - 10, 'Passing pose', at(23, 0.8), at(23, 3), { dx: 70, dy: -80 })
+  let end = flip(win, rt, at(23, 2.5), { approach: 0.6 })
+  const lastKey = rt[rt.length - 1]
+  callout(win, lastKey.x, lastKey.y - 10, 'Two frames sooner: a snappier step', end + 0.1, end + 1.4, { dx: 70, dy: -80 })
+  A(win.pointer, 'fadeOut', end + 0.3, 0.3, { fill: 'forwards' })
+  // Onion skin, then the first-frame ghost — real clicks on the timeline buttons.
+  const on = centre('onionButton')
+  const gh = centre('ghostButton')
+  showShot(win, 'ghostsOff', at(24, 2), 0.2)
+  focus(win, 760, 560, 1.15, at(24, 2), 0.7, CAM)
+  pointer(win, on.x + 160, on.y - 140, at(24, 2.3))
+  moveTo(win, on.x, on.y, at(24, 2.6), 0.5)
+  click(win, on.x, on.y, at(24, 3.5))
+  showShot(win, 'onionOn', at(24, 3.5) + 0.05)
+  focus(win, 640, 520, 1.45, at(25), 0.6, CAM)
+  callout(win, 610, 330, 'Keys either side', at(25, 0.4), at(25, 2), { dx: 140, dy: -60 })
+  moveTo(win, gh.x, gh.y, at(25, 0.6), 0.5)
+  click(win, gh.x, gh.y, at(25, 1.5))
+  showShot(win, 'ghostOn', at(25, 1.5) + 0.05)
+  callout(win, 560, 470, 'First frame, pinned', at(25, 2.2), undefined, { dx: -170, dy: 40 })
+  // Scrub on: the start pose stays in view.
+  end = flip(win, C.seqs.ghostScrub, at(26), { approach: 0.5, mark: false })
+}
+
+/* ======================= 7 · SAVE (bars 27–29) ======================= */
+{
+  const L = chapter(at(27), at(30))
+  const win = appWindow(L, 'beforeSave', SIDE.L.win, WIN_Y, WIN_W)
+  A(win.node, 'winIn', at(27) - 0.3, 0.8, { ease: SMOOTH })
+  stepText(L, 'L', { n: 7, eyebrow: 'Save', title: 'Saved into your .blend.', sub: 'Backed up first. Only what you changed is rewritten — and your new clip gets an NLA track.' }, at(27))
+  focus(win, 800, 470, 1.05, at(27) - 0.3, 0.01)
+  const caps = keycaps(L, 'L', ['Ctrl', 'S'], at(27, 1))
+  press(caps[0], at(27, 2))
+  press(caps[1], at(27, 2.15))
+  showShot(win, 'saved', at(27, 2.4), 0.2)
+  const toast = C.boxes.toast
+  focus(win, toast.x + toast.w / 2, toast.y + 200, 1.6, at(27, 2.5), 0.8, CAM)
+  callout(win, toast.x + toast.w / 2, toast.y + toast.h + 6, 'Backed up, then written', at(27, 3.3), at(28, 3), { dx: -120, dy: 110 })
+  // The new clip: it's an action in the file now, on its own NLA track.
+  const row = C.boxes.newRow
+  focus(win, row.x + 40, row.y + 40, 1.9, at(28, 3), 0.8, CAM)
+  callout(win, row.x, row.y + row.h / 2, 'walk-cycle → its own NLA track', at(29), undefined, { dx: -190, dy: 70 })
+  whoosh(at(27))
+}
+
+/* ======================= END CARD (bars 30–31 + tail) ======================= */
+{
+  const L = chapter(at(30))
+  const icon = el('img', 'abs', L, { left: '850px', top: '170px', width: '220px', height: '220px' })
+  icon.src = '../../build/icon.svg'
+  A(icon, 'iconPop', at(30), 0.7, { ease: SMOOTH })
+  const word = el('div', 'abs', L, { left: '0', right: '0', top: '420px', 'text-align': 'center', 'font-size': '124px', 'font-weight': '800', 'letter-spacing': '-.045em' })
+  ;'MeshAnimate'.split('').forEach((ch, i) => {
+    A(el('span', '', word, { display: 'inline-block' }, ch), 'letter', at(30, 0.5) + i * 0.035, 0.55, { ease: SMOOTH })
+  })
+  A(el('div', 'abs sub', L, { left: '0', right: '0', top: '585px', 'text-align': 'center', 'font-size': '34px' }, 'Pose-to-pose animation for your Blender rigs'), 'rise', at(30, 1.5), 0.7, { ease: SMOOTH })
+  const chips = el('div', 'abs', L, { left: '0', right: '0', top: '680px', display: 'flex', 'justify-content': 'center', gap: '14px' })
+  ;['Side-view posing', 'Mirror to half-cycle', 'Blender IK', 'Onion skin', 'Saves to .blend'].forEach((c, i) => {
+    A(el('div', 'chip', chips, {}, c), 'rise', at(31) + i * BEAT * 0.75, 0.5, { ease: SMOOTH })
+    sfx('Interface Percussion Snap.wav', at(31) + i * BEAT * 0.75, -21, 0.06)
+  })
+  A(el('div', 'abs sub', L, { left: '0', right: '0', top: '800px', 'text-align': 'center', 'font-size': '26px', color: '#71717a' }, 'Free and open source · github.com/stuyk/meshanimate'), 'rise', at(31, 3), 0.7, { ease: SMOOTH })
+  whoosh(at(30))
+}
+
+window.PREVIEW_SFX = SFX
+finalize(DURATION)
+</script>
+</body>
+</html>

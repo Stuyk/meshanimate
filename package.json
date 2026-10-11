@@ -29,7 +29,9 @@
     "build:all": "npm run build && electron-builder -wl",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "social-card": "electron scripts/render-social-card.mjs"
+    "social-card": "electron scripts/render-social-card.mjs",
+    "preview:capture": "xvfb-run -a -s \"-screen 0 2560x1600x24\" node tools/preview-video/capture.mjs",
+    "preview:render": "node tools/preview-video/render.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
