@@ -20,6 +20,14 @@
 Open a `.blend`, grab a bone by its handle and drag it where it should go. Move to another frame, pose again. MeshAnimate keys whole poses on a single clear timeline, shows the poses before and after as onion-skin ghosts, and writes everything back into your `.blend` as ordinary Blender actions, NLA tracks included.
 
 <p align="center">
+  <a href="https://www.youtube.com/watch?v=d1_FvcEW-b4">
+    <img src="https://img.youtube.com/vi/d1_FvcEW-b4/maxresdefault.jpg" alt="Watch the MeshAnimate walkthrough on YouTube" width="80%" />
+  </a>
+  <br />
+  <sub><a href="https://www.youtube.com/watch?v=d1_FvcEW-b4">▶ Watch the one-minute walkthrough</a>: open a .blend, key a walk cycle, refine it with IK and onion skin, save it back.</sub>
+</p>
+
+<p align="center">
   <img src="docs/screenshots/posing.png" alt="Posing a rigged robot with onion skins" width="49%" />
   <img src="docs/screenshots/ik-snap.png" alt="Dragging an IK foot target onto the snap grid in side view" width="49%" />
 </p>
