@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MeshAnimate — Pose-to-Pose Animation for Blender Rigs</title>
+  <meta name="description" content="Pivot-style pose-to-pose animation for rigged Blender characters. Grab a bone, drag it, key it. Onion skins, IK, snapping, and saving straight back into your .blend. Free, local, GPL-3.0." />
+  <meta property="og:title" content="MeshAnimate — Pose-to-Pose Animation for Blender Rigs" />
+  <meta property="og:description" content="Grab a bone, drag it, key it. Onion skins, Blender IK, snapping, and saves straight back into your .blend." />
+  <meta property="og:image" content="social-preview.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MeshAnimate — Pose-to-Pose Animation for Blender Rigs" />
+  <meta name="twitter:description" content="Grab a bone, drag it, key it. Onion skins, Blender IK, snapping, and saves straight back into your .blend." />
+  <meta name="twitter:image" content="social-preview.png" />
+  <link rel="icon" href="icon.png" />
+  <style>
+    /* Same tokens as the app (src/renderer/src/index.css). */
+    :root {
+      --bg-main: #242426;
+      --bg-panel: #2e2e32;
+      --bg-panel-header: #28282b;
+      --bg-input: #1e1e20;
+      --bg-deep: #18181a;
+      --border-color: #1c1c1e;
+      --border-subtle: #38383e;
+      --accent: #0084ff;
+      --accent-hover: #0073e6;
+      --accent-subtle: rgba(0, 132, 255, 0.14);
+      --handle: #ff4d4f;
+      --root: #ffa940;
+      --pole: #b37feb;
+      --text-main: #e8e8ea;
+      --text-muted: #9c9ca4;
+      --text-faint: #6e6e76;
+      --radius: 6px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+    header.top {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(24, 24, 26, 0.88);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+    }
+    header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text-main); }
+    .brand img { width: 28px; height: 28px; }
+    nav.links { display: flex; gap: 20px; font-size: 14px; }
+    nav.links a { color: var(--text-muted); }
+    nav.links a:hover { color: var(--text-main); text-decoration: none; }
+
+    .hero { padding: 72px 0 40px; text-align: center; }
+    .hero img.icon { width: 96px; height: 96px; }
+    .hero h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.1; margin: 18px 0 12px; letter-spacing: -0.02em; }
+    .hero p.lede { font-size: 18px; color: var(--text-muted); max-width: 660px; margin: 0 auto 28px; }
+    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: var(--radius);
+      font-weight: 600; font-size: 15px; border: 1px solid transparent;
+    }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.primary:hover { background: var(--accent-hover); text-decoration: none; }
+    .btn.ghost { border-color: var(--border-subtle); color: var(--text-main); background: var(--bg-panel); }
+    .btn.ghost:hover { border-color: var(--accent); text-decoration: none; }
+    .shot {
+      margin: 44px auto 0; max-width: 1040px;
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+    }
+    .shot img { display: block; width: 100%; height: auto; }
+
+    section { padding: 64px 0; border-top: 1px solid var(--border-color); }
+    section h2 { font-size: 28px; margin: 0 0 8px; letter-spacing: -0.01em; }
+    section p.sub { color: var(--text-muted); margin: 0 0 32px; max-width: 680px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--bg-panel); border: 1px solid var(--border-color);
+      border-left: 2px solid var(--accent);
+      border-radius: var(--radius); padding: 18px 18px 16px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .card p { margin: 0; color: var(--text-muted); font-size: 14px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 2px solid #0a0a0c; flex-shrink: 0; }
+
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    figure { margin: 0; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); overflow: hidden; }
+    figure img { display: block; width: 100%; height: auto; }
+    figcaption { padding: 10px 14px; font-size: 13px; color: var(--text-muted); }
+
+    ul.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; max-width: 760px; }
+    ul.checks li { padding-left: 28px; position: relative; color: var(--text-muted); }
+    ul.checks li b { color: var(--text-main); }
+    ul.checks li::before { content: "✓"; position: absolute; left: 4px; color: #10b981; font-weight: 700; }
+
+    table { border-collapse: collapse; width: 100%; max-width: 760px; font-size: 14px; }
+    td { padding: 9px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
+    td:first-child { width: 220px; }
+    kbd {
+      font-family: var(--mono); font-size: 12px; color: var(--text-main);
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: 3px; padding: 1px 6px; white-space: nowrap;
+    }
+    pre {
+      background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius);
+      padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 13px; color: var(--text-main);
+      max-width: 760px;
+    }
+    .note {
+      max-width: 760px; margin-top: 18px; padding: 12px 14px; border-radius: var(--radius);
+      background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fde68a; font-size: 14px;
+    }
+    footer { padding: 32px 0 48px; color: var(--text-faint); font-size: 13px; border-top: 1px solid var(--border-color); }
+    footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+    @media (max-width: 640px) {
+      nav.links { display: none; }
+      .hero { padding-top: 48px; }
+      td:first-child { width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="#"><img src="icon.png" alt="" /> MeshAnimate</a>
+      <nav class="links">
+        <a href="#features">Features</a>
+        <a href="#blend">Your .blend</a>
+        <a href="#keys">Keys</a>
+        <a href="https://github.com/stuyk/meshanimate">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero wrap">
+      <img class="icon" src="icon.png" alt="MeshAnimate icon" />
+      <h1>Grab a bone. Drag it. Key it.</h1>
+      <p class="lede">
+        Pivot-style pose-to-pose animation for rigged Blender characters — onion skins, a timeline
+        you can read at a glance, and your animation saved straight back into the .blend.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/stuyk/meshanimate/releases">Download</a>
+        <a class="btn ghost" href="https://github.com/stuyk/meshanimate">View source</a>
+      </div>
+      <div class="shot">
+        <img src="screenshots/posing.png" alt="MeshAnimate posing a robot with onion-skin ghosts and the timeline below" />
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="wrap">
+        <h2>Everything you need to block out motion</h2>
+        <p class="sub">No graph editors, no dope sheets to learn. Pose, move along the timeline, pose again.</p>
+        <div class="grid">
+          <div class="card">
+            <h3><span class="dot" style="background: var(--handle)"></span> Pose by dragging</h3>
+            <p>Every bone has a handle at its tip — drag it and the bone swings, like Pivot. The orange square moves the whole rig; gizmos are there for precise turns.</p>
+          </div>
+          <div class="card">
+            <h3><span class="dot" style="background: var(--root)"></span> Your rig's IK</h3>
+            <p>Limbs driven by Blender IK are posed by dragging the hand or foot, with poles aiming the elbow and knee — matching Blender's solver to within half a degree.</p>
+          </div>
+          <div class="card">
+            <h3><span class="dot" style="background: #ff5c5c"></span> Onion skin</h3>
+            <p>See the previous and next poses as coloured ghosts while you work, or every Nth frame, so spacing is easy to judge — and pin a ghost of the first frame to keep the starting pose in view.</p>
+          </div>
+          <div class="card">
+            <h3><span class="dot" style="background: var(--accent)"></span> A clear timeline</h3>
+            <p>One row of pose keys, one row for where the selected bone moves. Drag to retime, box-select, set easing, and loop just the part you're polishing.</p>
+          </div>
+          <div class="card">
+            <h3><span class="dot" style="background: #10b981"></span> Snapping</h3>
+            <p>From the side, front or top, handles land on a grid and bones swing in clean angle steps — measured in Blender units.</p>
+          </div>
+          <div class="card">
+            <h3><span class="dot" style="background: var(--pole)"></span> Cycles and reference</h3>
+            <p>Mirror a pose, or key its mirror half a cycle later for walks. Pose against a reference image or a video that follows the playhead.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>A closer look</h2>
+        <p class="sub">Screenshots from the app with the sample robot rig.</p>
+        <div class="gallery">
+          <figure>
+            <img src="screenshots/ik-snap.png" alt="Dragging an IK foot target onto the side-view snap grid" loading="lazy" />
+            <figcaption>Side view: dragging a foot's IK target onto the 5 cm snap grid.</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/angle-snap.png" alt="Swinging a forearm in 15 degree steps" loading="lazy" />
+            <figcaption>Swinging a forearm in 15° steps, with the angle shown as you drag.</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/timeline.png" alt="Timeline with a preview range and box-selected keys" loading="lazy" />
+            <figcaption>A preview range looping frames 11–27, box-selected keys, onion ghosts and clip thumbnails.</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/reference.png" alt="Posing against a reference image" loading="lazy" />
+            <figcaption>Posing against a reference image behind the model.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="blend">
+      <div class="wrap">
+        <h2>Your .blend stays yours</h2>
+        <p class="sub">MeshAnimate reads and writes .blend files through Blender itself, and treats them carefully.</p>
+        <ul class="checks">
+          <li><b>Backed up first.</b> Every save copies the file to <code>.meshanimate-backups/</code> beside it; the newest 20 are kept.</li>
+          <li><b>Only what you changed.</b> Untouched actions are left as they were; in an edited action, bones you didn't touch keep Blender's original curves.</li>
+          <li><b>Proper Blender actions.</b> New animations get a fake user and their own NLA track; renaming a clip renames its track.</li>
+          <li><b>Plays like Blender.</b> Untouched actions preview Blender's own evaluation; edits use the same Bézier, easing and quaternion maths, checked against Blender in the test suite.</li>
+          <li><b>Notices outside changes.</b> Save the file from Blender while it's open here and MeshAnimate reloads it — or, with unsaved work, offers to merge.</li>
+        </ul>
+        <div class="note">
+          Rigs that drive their mesh through other constraints — Rigify's Copy Transforms, Stretch To and
+          drivers, for example — can be animated and saved, but the viewport preview is only approximate
+          for them. MeshAnimate tells you when it opens one.
+        </div>
+      </div>
+    </section>
+
+    <section id="keys">
+      <div class="wrap">
+        <h2>Keys worth knowing</h2>
+        <p class="sub">Press <kbd>?</kbd> in the app for the full list.</p>
+        <table>
+          <tr><td><kbd>Space</kbd></td><td>Play / pause</td></tr>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd> · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>Previous / next frame · key</td></tr>
+          <tr><td><kbd>K</kbd></td><td>Key the current pose</td></tr>
+          <tr><td><kbd>M</kbd> · <kbd>Shift</kbd>+<kbd>M</kbd></td><td>Mirror pose · mirror to half-cycle</td></tr>
+          <tr><td><kbd>S</kbd></td><td>Snapping on / off (hold <kbd>Ctrl</kbd> to flip it for one drag)</td></tr>
+          <tr><td><kbd>Num 1</kbd> <kbd>3</kbd> <kbd>7</kbd></td><td>Front / side / top view (<kbd>Ctrl</kbd>: opposite side)</td></tr>
+          <tr><td><kbd>[</kbd> · <kbd>]</kbd> · <kbd>\</kbd></td><td>Preview range start · end · clear</td></tr>
+          <tr><td><kbd>Q</kbd> <kbd>E</kbd> <kbd>W</kbd></td><td>Pose handles / rotate gizmo / move gizmo</td></tr>
+          <tr><td><kbd>O</kbd> · <kbd>Shift</kbd>+<kbd>O</kbd></td><td>Onion skin · first-frame ghost</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save into the .blend</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Requirements &amp; building</h2>
+        <p class="sub">
+          You need <a href="https://www.blender.org/download/">Blender</a> installed (tested with 5.2);
+          MeshAnimate finds it automatically or you can point to it in Preferences. Your .blend needs an
+          armature — skinned meshes and rigid parts parented to bones both work.
+        </p>
+        <pre>bun install          # or npm install
+bun run dev          # run with hot reload
+bun run test         # unit tests, including Blender parity fixtures
+bun run build:linux  # or build:win / build:mac</pre>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>MeshAnimate · GPL-3.0-or-later</span>
+      <a href="https://github.com/stuyk/meshanimate">github.com/stuyk/meshanimate</a>
+    </div>
+  </footer>
+</body>
+</html>

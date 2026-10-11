@@ -1,0 +1,84 @@
+appId: com.stuyk.meshanimate
+productName: MeshAnimate
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+
+asarUnpack:
+  - resources/**
+
+win:
+  executableName: MeshAnimate
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  artifactName: ${productName}-Windows-Setup-${version}.${ext}
+
+portable:
+  artifactName: ${productName}-Windows-Portable-${version}.${ext}
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: tar.gz
+      arch:
+        - x64
+  icon: build/icon.png
+  category: Graphics;3DGraphics;Development;
+  maintainer: Stuyk
+  synopsis: Pose-to-pose 3D mesh animation studio
+  description: Pivot-style keyframe animation for rigged 3D meshes with onion skinning and a clear timeline.
+  artifactName: ${productName}-Linux-${version}.${ext}
+
+appImage:
+  artifactName: ${productName}-Linux-${version}.${ext}
+
+deb:
+  artifactName: ${productName}-Linux-${version}.${ext}
+
+mac:
+  icon: build/icon.icns
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSDocumentsFolderUsageDescription: MeshAnimate requests access to your Documents folder to load and save 3D models and animations.
+    - NSDownloadsFolderUsageDescription: MeshAnimate requests access to your Downloads folder to load and save 3D models and animations.
+  notarize: false
+  artifactName: ${productName}-macOS-${version}.${ext}
+
+dmg:
+  artifactName: ${productName}-macOS-${version}.${ext}
+
+npmRebuild: false
+
+publish:
+  provider: github
+  owner: stuyk
+  repo: meshanimate
+  releaseType: draft

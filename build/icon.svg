@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <!-- Same drawing as AppIcon in src/renderer/src/components/icons.tsx -->
+  <rect width="128" height="128" rx="28" fill="#1e2430" />
+
+  <!-- Onion ghost of the previous pose -->
+  <g stroke="#ff5c5c" stroke-opacity="0.45" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M52 42 L50 74 M50 74 L36 102 M50 74 L60 102 M51 52 L32 66" />
+  </g>
+
+  <!-- Current pose -->
+  <g stroke="#e8e8ea" stroke-width="8" stroke-linecap="round" fill="none">
+    <path d="M68 40 L68 74 M68 74 L54 104 M68 74 L84 102 M68 50 L88 36 M68 50 L90 62" />
+  </g>
+  <circle cx="68" cy="28" r="11" fill="#e8e8ea" />
+
+  <!-- Joint handles: selected (blue), posable (red), root (orange square) -->
+  <circle cx="88" cy="36" r="6" fill="#0084ff" stroke="#1e2430" stroke-width="2.5" />
+  <circle cx="90" cy="62" r="6" fill="#ff4d4f" stroke="#1e2430" stroke-width="2.5" />
+  <circle cx="54" cy="104" r="6" fill="#ff4d4f" stroke="#1e2430" stroke-width="2.5" />
+  <circle cx="84" cy="102" r="6" fill="#ff4d4f" stroke="#1e2430" stroke-width="2.5" />
+  <rect x="62" y="68" width="12" height="12" fill="#ffa940" stroke="#1e2430" stroke-width="2.5" />
+</svg>
