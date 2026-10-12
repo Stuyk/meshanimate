@@ -23,6 +23,14 @@ out_dir = argv[0]
 os.makedirs(out_dir, exist_ok=True)
 
 scene = bpy.context.scene
+
+# A file saved in Edit Mode keeps its bone changes in edit bones until Edit
+# Mode is left. Leave it now (in memory only): otherwise the bones read below
+# are out of date, and the exporter leaves Edit Mode itself, rebuilding the
+# bones and losing the name tags set on them further down.
+if bpy.context.object and bpy.context.object.mode != "OBJECT":
+    bpy.ops.object.mode_set(mode="OBJECT")
+
 POSE_CHANNELS = ("location", "rotation_quaternion", "rotation_euler", "rotation_axis_angle", "scale")
 
 

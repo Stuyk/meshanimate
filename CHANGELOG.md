@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.1
+
+### Fixes
+- Files saved in Blender while in Edit Mode now open. Before, they failed with "Bones missing from the display model".
+
 ## v1.0.0
 
 ### Changes
