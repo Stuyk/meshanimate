@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.2
+
+### Changes
+- The preview now plays Copy Rotation constraints between bones of the rig (World or Pose space, Replace, all axes), so hands and feet that follow their IK controllers show the way Blender shows them. Before, they played their own keys and pointed the wrong way, and Copy Rotation was listed as unsupported.
+- Rotating a hand or foot that copies its IK controller's rotation now turns the controller, so the turn stays. Before, the constraint undid it.
+- You can copy one bone from a keyframe and paste it into another keyframe. Other bones don't change, except the IK and Copy Rotation controllers that drive it, which come along so the bone's rotation copies too. Use Copy / Paste in the Bone panel, Ctrl+Shift+C / Ctrl+Shift+V, or right-click a key on the timeline.
+
+### Fixes
+- New clips are now added to the NLA editor as muted tracks. Before, if any track in the file was unmuted, the new track was too, and it played on top of everything in Blender and game importers.
+
 ## v1.0.1
 
 ### Fixes

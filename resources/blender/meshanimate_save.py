@@ -211,18 +211,19 @@ def ensure_nla_track(action):
     Every animation MeshAnimate manages gets a track on the armature, the
     way Blender's Stash and most game-export setups lay them out: one track
     per action, named after it, one strip at the action's first frame.
-    New tracks copy the settings of the rig's existing tracks (muted or
-    not, blend, extrapolation) so they behave like their neighbours.
+    New tracks are always muted, like Blender's Stash: an unmuted track
+    plays on every frame and would change what the file shows in Blender
+    and in game importers. Blend and extrapolation copy the rig's existing
+    strips so the track behaves like its neighbours once you unmute it.
     """
     ad = arm.animation_data or arm.animation_data_create()
     for track in ad.nla_tracks:
         if any(s.action == action for s in track.strips):
             return False
     template = next((s for t in ad.nla_tracks for s in t.strips), None)
-    muted = all(t.mute for t in ad.nla_tracks) if len(ad.nla_tracks) else True
     track = ad.nla_tracks.new()
     track.name = action.name
-    track.mute = muted
+    track.mute = True
     start, _end = action.frame_range
     strip = track.strips.new(action.name, int(round(start)), action)
     if hasattr(strip, "action_slot") and strip.action_slot is None:

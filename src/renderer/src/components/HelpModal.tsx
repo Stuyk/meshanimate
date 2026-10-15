@@ -13,6 +13,7 @@ const HOTKEYS = [
   'keyPose',
   'deleteKeys',
   'copyPaste',
+  'copyPasteBone',
   'mirror',
   'halfCycle',
   'range',

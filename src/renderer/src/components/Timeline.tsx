@@ -1,6 +1,6 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from 'solid-js'
 import { studio } from '../anim/studio'
-import { mirrorToHalfCycle } from '../anim/actions'
+import { copyBoneFromKey, mirrorToHalfCycle, pasteBoneChannels } from '../anim/actions'
 import { jointDiffers } from '../anim/pose'
 import { readPose } from '../anim/rig'
 import { EASING_OPTIONS, type Easing, type PoseKey } from '../anim/types'
@@ -919,6 +919,31 @@ export default function Timeline(): JSX.Element {
                     setMenu(null)
                   }}
                 />
+                <Show when={studio.selectedJoint()}>
+                  {(joint) => (
+                    <MenuButton
+                      label={t('timeline.copyBoneMenu', { joint: joint() })}
+                      onClick={() => {
+                        copyBoneFromKey(m().keyId!, joint())
+                        setMenu(null)
+                      }}
+                    />
+                  )}
+                </Show>
+                <Show when={studio.clipboardBone()}>
+                  {(copied) => (
+                    <MenuButton
+                      label={t('timeline.pasteBoneMenu', { joint: copied().joint })}
+                      onClick={() => {
+                        const k = clip()?.keys.find((x) => x.id === m().keyId)
+                        if (k) {
+                          pasteBoneChannels(k.frame)
+                        }
+                        setMenu(null)
+                      }}
+                    />
+                  )}
+                </Show>
                 <MenuButton
                   label={t('timeline.duplicateToPlayhead', { frame: bf(studio.frame()) })}
                   onClick={() => {

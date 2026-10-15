@@ -26,10 +26,12 @@ import {
   sourcesFromDisk
 } from './anim/blendDoc'
 import {
+  copyBoneChannels,
   copyLivePose,
   flushPendingCommit,
   mirrorLivePose,
   mirrorToHalfCycle,
+  pasteBoneChannels,
   pasteClipboardPose
 } from './anim/actions'
 import type { Clip } from './anim/types'
@@ -504,6 +506,18 @@ export default function App(): JSX.Element {
       disabled: !studio.clipboardPose(),
       onClick: pasteClipboardPose
     },
+    {
+      label: t('menu.copyBone'),
+      shortcut: 'Ctrl+Shift+C',
+      disabled: !studio.selectedJoint(),
+      onClick: () => copyBoneChannels()
+    },
+    {
+      label: t('menu.pasteBone'),
+      shortcut: 'Ctrl+Shift+V',
+      disabled: !studio.clipboardBone(),
+      onClick: () => pasteBoneChannels()
+    },
     { label: t('menu.mirrorPose'), shortcut: 'M', onClick: mirrorLivePose },
     { label: t('menu.mirrorHalfCycle'), shortcut: 'Shift+M', onClick: halfCycle },
     { type: 'divider' },
@@ -561,8 +575,8 @@ export default function App(): JSX.Element {
       y: () => studio.redo(),
       s: () => void save(shift),
       o: () => void promptOpen(),
-      c: copyLivePose,
-      v: pasteClipboardPose
+      c: () => (shift ? copyBoneChannels() : copyLivePose()),
+      v: () => (shift ? pasteBoneChannels() : pasteClipboardPose())
     }
     const action = actions[key]
     action?.()

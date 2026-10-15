@@ -1,5 +1,5 @@
 import { studio } from './studio'
-import { readPose, refreshLive, setLiveBasis } from './rig'
+import { readPose, refreshLive, setLiveBasis, type Rig } from './rig'
 import { mirrorPose } from './manipulate'
 import { alignHemispheres, IDENTITY_JOINT } from './pose'
 import type { JointPose, Pose } from './types'
@@ -155,6 +155,79 @@ export function pasteClipboardPose(): void {
   if (pose) {
     setLivePose(pose)
   }
+}
+
+/**
+ * The bones whose channels decide how `name` looks. A bone that fully copies
+ * another's rotation ignores its own, and an IK chain bone is turned by its
+ * target and pole, so copying just the bone would leave its rotation behind.
+ */
+function controllingBones(rig: Rig, name: string): string[] {
+  const out = new Set([name])
+  const ik = [rig.ikDriven.get(name), ...rig.ik.filter((c) => c.owner === name)]
+  for (const c of ik) {
+    if (c) {
+      out.add(c.target)
+      if (c.pole) {
+        out.add(c.pole)
+      }
+    }
+  }
+  for (const c of rig.copyRotation) {
+    if (c.owner === name) {
+      out.add(c.target)
+    }
+  }
+  return [...out].filter((n) => rig.jointByName.has(n))
+}
+
+function copyBoneFrom(pose: Pose, jointName?: string): void {
+  const rig = studio.rig()
+  const name = jointName ?? studio.selectedJoint()
+  if (!rig || !name) {
+    return
+  }
+  const copied: Pose = {}
+  for (const n of controllingBones(rig, name)) {
+    copied[n] = pose[n] ?? rig.rest[n] ?? IDENTITY_JOINT
+  }
+  studio.setClipboardBone({ joint: name, pose: copied })
+}
+
+/** Copies one bone from the live pose (defaults to the selected bone). */
+export function copyBoneChannels(jointName?: string): void {
+  const rig = studio.rig()
+  if (rig) {
+    copyBoneFrom(readPose(rig), jointName)
+  }
+}
+
+/** Copies one bone out of a stored key, without moving the playhead. */
+export function copyBoneFromKey(keyId: string, jointName?: string): void {
+  const key = studio.activeClip()?.keys.find((k) => k.id === keyId)
+  if (key) {
+    copyBoneFrom(key.pose, jointName)
+  }
+}
+
+/**
+ * Pastes the copied bone onto the same bone at a frame (the playhead by
+ * default) and keys it there, leaving every other bone as it was. Pasting at
+ * the playhead keeps the live pose, so unkeyed edits to other bones survive.
+ */
+export function pasteBoneChannels(frame = studio.frame()): void {
+  const rig = studio.rig()
+  const clip = studio.activeClip()
+  const copied = studio.clipboardBone()
+  if (!rig || !clip || !copied) {
+    return
+  }
+  flushPendingCommit()
+  const base =
+    frame === studio.frame()
+      ? readPose(rig)
+      : (clip.keys.find((k) => k.frame === frame)?.pose ?? studio.poseAt(clip, frame))
+  studio.setKey(frame, { ...base, ...copied.pose })
 }
 
 studio.onBeforeChange(flushPendingCommit)

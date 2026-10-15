@@ -1,7 +1,7 @@
 {
   "name": "meshanimate",
   "productName": "MeshAnimate",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Pose-to-pose animation for rigged Blender characters",
   "main": "./out/main/index.js",
   "author": "Stuyk",

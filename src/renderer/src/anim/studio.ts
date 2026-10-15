@@ -37,6 +37,15 @@ function loadSnap(): SnapSettings {
   }
 }
 
+/**
+ * A copied bone: the bone picked, plus the channels of every bone that sets
+ * how it looks (itself and any constraint controllers driving it).
+ */
+export interface BoneClipboard {
+  joint: string
+  pose: Pose
+}
+
 export type PoseTool = 'pose' | 'rotate' | 'move'
 export type OnionMode = 'frames' | 'keys'
 
@@ -174,6 +183,8 @@ function createStudio() {
   const [unkeyed, setUnkeyed] = createSignal(false)
   const [dirty, setDirty] = createSignal(false)
   const [clipboardPose, setClipboardPose] = createSignal<Pose | null>(null)
+  /** One bone's channels, copied to paste onto the same bone at another frame. */
+  const [clipboardBone, setClipboardBone] = createSignal<BoneClipboard | null>(null)
   const [snap, setSnapRaw] = createSignal<SnapSettings>(loadSnap())
   /** Reference image or video shown behind the model (per file, never saved into it). */
   const [reference, setReferenceRaw] = createSignal<Reference | null>(null)
@@ -663,6 +674,8 @@ function createStudio() {
     setDirty,
     clipboardPose,
     setClipboardPose,
+    clipboardBone,
+    setClipboardBone,
     snap,
     setSnap,
     reference,

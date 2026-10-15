@@ -65,6 +65,8 @@ export const en = {
     keyPose: 'Key Pose',
     copyPose: 'Copy Pose',
     pastePose: 'Paste Pose',
+    copyBone: 'Copy Bone',
+    pasteBone: 'Paste Bone',
     mirrorPose: 'Mirror Pose',
     mirrorHalfCycle: 'Mirror to Half-Cycle',
     previewStart: 'Set Preview Start',
@@ -287,6 +289,8 @@ export const en = {
     mirrorHalfCycleHint:
       'Key the mirrored pose half a cycle later. A left step becomes a right step.',
     copyPoseMenu: 'Copy pose',
+    copyBoneMenu: 'Copy {joint} from this key',
+    pasteBoneMenu: 'Paste {joint} into this key',
     duplicateToPlayhead: 'Duplicate to playhead ({frame})'
   },
 
@@ -319,7 +323,11 @@ export const en = {
     location: 'Location',
     rotation: 'Rotation°',
     sameAsBlender: "Same values as Blender's Bone panel.",
-    clearTransform: 'Clear transform'
+    clearTransform: 'Clear transform',
+    copy: 'Copy',
+    copyTitle: "Copy this bone's location and rotation (Ctrl+Shift+C)",
+    paste: 'Paste',
+    pasteTitle: 'Paste {joint} here and key it (Ctrl+Shift+V)'
   },
 
   rig: {
@@ -427,6 +435,7 @@ export const en = {
       keyPose: { keys: 'K', action: 'Key the current pose' },
       deleteKeys: { keys: 'Delete', action: 'Delete selected keys' },
       copyPaste: { keys: 'Ctrl+C / Ctrl+V', action: 'Copy / paste pose' },
+      copyPasteBone: { keys: 'Ctrl+Shift+C / V', action: 'Copy / paste the selected bone' },
       mirror: { keys: 'M', action: 'Mirror pose left ↔ right' },
       halfCycle: { keys: 'Shift+M', action: 'Mirror to half-cycle (walk cycles)' },
       range: { keys: '[ / ] / \\', action: 'Preview range start / end / clear' },

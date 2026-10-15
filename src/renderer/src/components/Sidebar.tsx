@@ -1,7 +1,13 @@
 import { createMemo, createSignal, For, Show, type JSX } from 'solid-js'
 import * as THREE from 'three'
 import { studio } from '../anim/studio'
-import { mirrorLivePose, resetToRest, setJointChannels } from '../anim/actions'
+import {
+  copyBoneChannels,
+  mirrorLivePose,
+  pasteBoneChannels,
+  resetToRest,
+  setJointChannels
+} from '../anim/actions'
 import { formatGrid } from '../viewport/snap'
 import { poseThumbnail } from '../anim/thumbnail'
 import type { IkConstraint } from '../anim/ik'
@@ -18,6 +24,7 @@ import {
   ImagesIcon,
   MagnetIcon,
   MirrorIcon,
+  PasteIcon,
   PlusIcon,
   RefreshCwIcon,
   TrashIcon
@@ -372,6 +379,27 @@ function JointSection(): JSX.Element {
               onClick={() => resetToRest(name()!)}
             >
               {t('bone.clearTransform')}
+            </Button>
+          </div>
+          <div class="flex gap-1">
+            <Button
+              size="xs"
+              class="flex-1"
+              icon={<CopyIcon size={12} />}
+              onClick={() => copyBoneChannels(name()!)}
+              title={t('bone.copyTitle')}
+            >
+              {t('bone.copy')}
+            </Button>
+            <Button
+              size="xs"
+              class="flex-1"
+              icon={<PasteIcon size={12} />}
+              disabled={!studio.clipboardBone()}
+              onClick={() => pasteBoneChannels()}
+              title={t('bone.pasteTitle', { joint: studio.clipboardBone()?.joint ?? '' })}
+            >
+              {t('bone.paste')}
             </Button>
           </div>
         </div>

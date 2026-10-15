@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { matchTargetToOwner, solveCopyRotation, type CopyRotationConstraint } from './copyRotation'
 import { ikChain, solveIk, type IkConstraint, type IkContext } from './ik'
 import { clonePose, IDENTITY_JOINT } from './pose'
 import { UNIT_SCALE, type Easing, type JointPose, type Pose, type Quat, type Vec3 } from './types'
@@ -21,6 +22,11 @@ export interface BlendConstraint {
   chainCount?: number
   useTail?: boolean
   sameArmature?: boolean
+  ownerSpace?: string
+  targetSpace?: string
+  mixMode?: string
+  useAxes?: [boolean, boolean, boolean]
+  invertAxes?: [boolean, boolean, boolean]
 }
 
 export interface BlendBone {
@@ -96,6 +102,8 @@ export interface Rig {
   rest: Pose
   bones: Map<string, BlendBone>
   ik: IkConstraint[]
+  /** Copy Rotation constraints the preview evaluates, parents before children. */
+  copyRotation: CopyRotationConstraint[]
   roles: Map<string, JointRole>
   /** Bones whose rotation Blender's IK overrides, and the constraint doing it. */
   ikDriven: Map<string, IkConstraint>
@@ -138,12 +146,26 @@ function constraintLabel(type: string): string {
     .join(' ')
 }
 
+/** Copy Rotation set up the way the preview evaluates it (see copyRotation.ts). */
+function isPlainCopyRotation(c: BlendConstraint): boolean {
+  const space = c.ownerSpace ?? 'WORLD'
+  return (
+    space === (c.targetSpace ?? 'WORLD') &&
+    (space === 'WORLD' || space === 'POSE') &&
+    (c.mixMode ?? 'REPLACE') === 'REPLACE' &&
+    (c.useAxes ?? [true, true, true]).every(Boolean) &&
+    !(c.invertAxes ?? [false, false, false]).some(Boolean)
+  )
+}
+
 function readConstraints(bones: BlendBone[]): {
   ik: IkConstraint[]
+  copyRotation: CopyRotationConstraint[]
   warnings: string[]
   unsupportedOn: Set<string>
 } {
   const ik: IkConstraint[] = []
+  const copyRotation: CopyRotationConstraint[] = []
   const counts = new Map<string, number>()
   const unsupportedOn = new Set<string>()
   const skip = (label: string, bone: string): void => {
@@ -153,6 +175,10 @@ function readConstraints(bones: BlendBone[]): {
   for (const b of bones) {
     for (const c of b.constraints) {
       if (c.mute || c.influence <= 0) {
+        continue
+      }
+      if (c.type === 'COPY_ROTATION' && c.sameArmature && c.subtarget && isPlainCopyRotation(c)) {
+        copyRotation.push({ owner: b.name, target: c.subtarget, influence: c.influence })
         continue
       }
       if (c.type !== 'IK') {
@@ -175,7 +201,7 @@ function readConstraints(bones: BlendBone[]): {
     }
   }
   const warnings = [...counts].sort((a, b) => b[1] - a[1]).map(([label, n]) => `${label} ×${n}`)
-  return { ik, warnings, unsupportedOn }
+  return { ik, copyRotation, warnings, unsupportedOn }
 }
 
 /**
@@ -282,7 +308,7 @@ export async function loadRig(glbUrl: string, meta: BlendMeta, blendPath: string
     rest[b.name] = meta.storedPose?.[b.name] ?? IDENTITY_JOINT
   }
 
-  const { ik, warnings, unsupportedOn } = readConstraints(ordered)
+  const { ik, copyRotation, warnings, unsupportedOn } = readConstraints(ordered)
   const roles = new Map<string, JointRole>(ordered.map((b) => [b.name, 'bone']))
   const ikDriven = new Map<string, IkConstraint>()
   for (const c of ik) {
@@ -316,6 +342,7 @@ export async function loadRig(glbUrl: string, meta: BlendMeta, blendPath: string
     rest,
     bones,
     ik,
+    copyRotation,
     roles,
     ikDriven,
     warnings,
@@ -373,12 +400,15 @@ export function evaluatePose(
     local.decompose(joint.position, joint.quaternion, joint.scale)
   }
   top.updateMatrixWorld(true)
-  if (rig.ik.length === 0) {
-    return
+  if (rig.ik.length > 0) {
+    const ctx = ikContext(rig, joints)
+    for (const c of rig.ik) {
+      solveIk(ctx, c)
+    }
   }
-  const ctx = ikContext(rig, joints)
-  for (const c of rig.ik) {
-    solveIk(ctx, c)
+  // After IK: a hand copying its IK controller sits on the solved forearm.
+  for (const c of rig.copyRotation) {
+    solveCopyRotation(joints, c)
   }
 }
 
@@ -426,9 +456,20 @@ export function basisFromNode(rig: Rig, name: string): JointPose {
   return out
 }
 
-/** Re-reads the given bones' channels from their nodes, then re-evaluates. */
+/**
+ * Re-reads the given bones' channels from their nodes, then re-evaluates.
+ * A bone that fully copies another's rotation can't keep a turn of its own
+ * (the constraint overrides it, in Blender too), so the turn goes to the bone
+ * it copies: rotating a hand turns its IK controller, as an animator would.
+ */
 export function commitNodes(rig: Rig, names: string[]): void {
   for (const n of names) {
+    const copy = rig.copyRotation.find((c) => c.owner === n && c.influence >= 0.999)
+    if (copy && rig.jointByName.has(copy.target)) {
+      matchTargetToOwner(rig.jointByName, copy)
+      rig.basis[copy.target] = basisFromNode(rig, copy.target)
+      continue
+    }
     rig.basis[n] = basisFromNode(rig, n)
   }
   refreshLive(rig)

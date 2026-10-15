@@ -164,6 +164,17 @@ for b in arm.data.bones:
                 "useRotation": c.use_rotation,
                 "sameArmature": c.target == arm,
             })
+        elif c.type == "COPY_ROTATION":
+            entry.update({
+                "target": c.target.name if c.target else None,
+                "subtarget": c.subtarget or None,
+                "sameArmature": c.target == arm,
+                "ownerSpace": c.owner_space,
+                "targetSpace": c.target_space,
+                "mixMode": c.mix_mode,
+                "useAxes": [c.use_x, c.use_y, c.use_z],
+                "invertAxes": [c.invert_x, c.invert_y, c.invert_z],
+            })
         constraints.append(entry)
     bones.append({
         "name": b.name,
